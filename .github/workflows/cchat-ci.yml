@@ -10,8 +10,8 @@ env:
   CASUAL_CHAT_ORG: iTNTPiston
   CIRCLE_BRANCH: testci
   CIRCLE_BUILD_NUM: 12345
-  GOPATH: $HOME/go
-  PATH: $PATH:$GOPATH/bin:/usr/local/go/bin
+  GOPATH: ${HOME}/go
+  PATH: ${PATH}:${GOPATH}/bin:/usr/local/go/bin
 
 jobs:
   setup:
