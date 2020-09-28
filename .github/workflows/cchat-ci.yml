@@ -13,11 +13,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-        with:
-          path: ./mattermost/
 
   check-dependency:
-    name: Check Dependency
+    name: Setup Dependency
     runs-on: cc-gitrunner
     steps:
       - name: Setup Go Environment
@@ -34,7 +32,6 @@ jobs:
         run: |
           make app-layers
           if [[ -n $(git status --porcelain) ]]; then echo "Please update the app layers using make app-layers"; exit 1; fi
-        working-directory: ./mattermost/mattermost-server
 
   check-store-layers:
     name: Check Store Layers
@@ -45,7 +42,6 @@ jobs:
         run: |
           make store-layers
           if [[ -n $(git status --porcelain) ]]; then echo "Please update the store layers using make store-layers"; exit 1; fi
-        working-directory: ./mattermost/mattermost-server
   
   check-style:
     name: Check Style
@@ -54,17 +50,14 @@ jobs:
     steps:
       - name: Install golangci-lint
         run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b /usr/local/bin v1.25.1
-        working-directory: ./mattermost
       - name: Install mattermost-govet
         run: GO111MODULE=off go get -u github.com/mattermost/mattermost-govet
-        working-directory: ./mattermost
       - name: make check-style
         run: |
           export GOBIN=${PWD}/bin
           export PATH=$PATH:$GOBIN
           make config-reset
           make check-style BUILD_NUMBER='${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}' MM_NO_ENTERPRISE_LINT=true
-        working-directory: ./mattermost/server
 
   setup-webapp:
     name: Setup WebApp
@@ -75,15 +68,15 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: iTNTPiston/mattermost-webapp
-          path: ./mattermost/
+          path: ../mattermost-webapp
       - name: Export Git Commit
         run: |
           export WEBAPP_GIT_COMMIT=$(git rev-parse HEAD)
           echo "$WEBAPP_GIT_COMMIT"
-        working-directory: ./mattermost/mattermost-webapp
+        working-directory: ../mattermost-webapp
       - name: Install Node Modules
         run: npm ci
-        working-directory: ./mattermost/mattermost-webapp
+        working-directory: ../mattermost-webapp
 
   test-webapp:
     name: Test WebApp
@@ -92,7 +85,7 @@ jobs:
     steps:
       - name: make test
         run: make test
-        working-directory: ./mattermost/mattermost-webapp
+        working-directory: ../mattermost-webapp
   
   build-webapp:
     name: Build WebApp
@@ -101,7 +94,7 @@ jobs:
     steps:
       - name: make build
         run: make build
-        working-directory: ./mattermost/mattermost-webapp
+        working-directory: ../mattermost-webapp
 
   # test-server:
   #   name: Test Server
