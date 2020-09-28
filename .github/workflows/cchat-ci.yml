@@ -27,9 +27,10 @@ jobs:
     steps:
       - name: Add Go Path # Do this before all go commands
         run: | 
-          echo '::set-env name=GOPATH::$(HOME)/go'
-          echo '::add-path::$(GOPATH)/bin'
-          echo '::add-path::/usr/local/go/bin'
+          echo $HOME
+          echo ::set-env name=GOPATH::$HOME/go
+          echo ::add-path::$GOPATH/bin
+          echo ::add-path::/usr/local/go/bin
       - name: Verify Go Installment
         run: go version
       - name: Verify Make Installment
