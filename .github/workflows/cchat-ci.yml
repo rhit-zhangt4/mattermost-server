@@ -1,13 +1,112 @@
-#name: Casual Chat CI
+name: Casual Chat CI
 
-#on:
-#  push:
-#    branches: [ master ]
-#  pull_request:
-#    branches: [ master ]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
-#jobs:
+jobs:
+  setup:
+    name: Setup
+    runs-on: cc-gitrunner
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          path: ./mattermost/
 
+  check-dependency:
+    name: Check Dependency
+    runs-on: cc-gitrunner
+    steps:
+      - name: Setup Go Environment
+        uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15.2
+
+  check-app-layers:
+    name: Check App Layers
+    runs-on: cc-gitrunner
+    needs: [ setup , check-dependency ]
+    steps:
+      - name: make app-layers
+        run: |
+          make app-layers
+          if [[ -n $(git status --porcelain) ]]; then echo "Please update the app layers using make app-layers"; exit 1; fi
+        working-directory: ./mattermost/mattermost-server
+
+  check-store-layers:
+    name: Check Store Layers
+    runs-on: cc-gitrunner
+    needs: [ setup , check-dependency ]
+    steps:
+      - name: make store-layers
+        run: |
+          make store-layers
+          if [[ -n $(git status --porcelain) ]]; then echo "Please update the store layers using make store-layers"; exit 1; fi
+        working-directory: ./mattermost/mattermost-server
+  
+  check-style:
+    name: Check Style
+    runs-on: cc-gitrunner
+    needs: [ check-app-layers , check-store-layers ]
+    steps:
+      - name: Install golangci-lint
+        run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b /usr/local/bin v1.25.1
+        working-directory: ./mattermost
+      - name: Install mattermost-govet
+        run: GO111MODULE=off go get -u github.com/mattermost/mattermost-govet
+        working-directory: ./mattermost
+      - name: make check-style
+        run: |
+          export GOBIN=${PWD}/bin
+          export PATH=$PATH:$GOBIN
+          make config-reset
+          make check-style BUILD_NUMBER='${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}' MM_NO_ENTERPRISE_LINT=true
+        working-directory: ./mattermost/server
+
+  setup-webapp:
+    name: Setup WebApp
+    runs-on: cc-gitrunner
+    needs: setup
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        with:
+          repository: iTNTPiston/mattermost-webapp
+          path: ./mattermost/
+      - name: Export Git Commit
+        run: |
+          export WEBAPP_GIT_COMMIT=$(git rev-parse HEAD)
+          echo "$WEBAPP_GIT_COMMIT"
+        working-directory: ./mattermost/mattermost-webapp
+      - name: Install Node Modules
+        run: npm ci
+        working-directory: ./mattermost/mattermost-webapp
+
+  test-webapp:
+    name: Test WebApp
+    runs-on: cc-gitrunner
+    needs: setup-webapp
+    steps:
+      - name: make test
+        run: make test
+        working-directory: ./mattermost/mattermost-webapp
+  
+  build-webapp:
+    name: Build WebApp
+    runs-on: cc-gitrunner
+    needs: test-webapp
+    steps:
+      - name: make build
+        run: make build
+        working-directory: ./mattermost/mattermost-webapp
+
+  # test-server:
+  #   name: Test Server
+  #   runs-on: cc-gitrunner
+  #   needs: [ check-style , check-app-layers , check-store-layers]
 #  build:
 #    name: Build
 #    runs-on: ubuntu-latest
