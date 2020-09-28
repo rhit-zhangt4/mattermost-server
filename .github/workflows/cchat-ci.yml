@@ -10,6 +10,8 @@ env:
   CASUAL_CHAT_ORG: iTNTPiston
   CIRCLE_BRANCH: testci
   CIRCLE_BUILD_NUM: 12345
+  GOPATH: $HOME/go
+  PATH: $PATH:$GOPATH/bin:/usr/local/go/bin
 
 jobs:
   setup:
@@ -80,6 +82,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: ${CASUAL_CHAT_ORG}/mattermost-webapp
+          ref: master
           path: ./mattermost-webapp
       - name: Export Git Commit
         run: |
