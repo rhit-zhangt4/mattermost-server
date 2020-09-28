@@ -10,8 +10,6 @@ env:
   CASUAL_CHAT_ORG: iTNTPiston
   CIRCLE_BRANCH: testci
   CIRCLE_BUILD_NUM: 12345
-  GOPATH: ${HOME}/go
-  PATH: ${PATH}:${GOPATH}/bin:/usr/local/go/bin
 
 jobs:
   setup:
@@ -27,6 +25,11 @@ jobs:
     name: Check Dependency
     runs-on: cc-gitrunner
     steps:
+      - name: Add Go Path # Do this before all go commands
+        run: | 
+          echo '::set-env name=GOPATH::$(HOME)/go'
+          echo '::add-path::$(GOPATH)/bin'
+          echo '::add-path::/usr/local/go/bin'
       - name: Verify Go Installment
         run: go version
       - name: Verify Make Installment
