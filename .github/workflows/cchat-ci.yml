@@ -7,9 +7,9 @@ on:
     branches: [ master ]
 
 env:
-  CASUAL_CHAT_ORG=iTNTPiston
-  CIRCLE_BRANCH=testci
-  CIRCLE_BUILD_NUM=12345
+  CASUAL_CHAT_ORG: iTNTPiston
+  CIRCLE_BRANCH: testci
+  CIRCLE_BUILD_NUM: 12345
 
 jobs:
   setup:
