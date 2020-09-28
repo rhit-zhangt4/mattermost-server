@@ -27,10 +27,8 @@ jobs:
     steps:
       - name: Add Go Path # Do this before all go commands
         run: | 
-          echo $HOME
           echo ::set-env name=GOPATH::$HOME/go
-          echo $GOPATH
-          echo ::add-path::$GOPATH/bin
+          echo ::add-path::$HOME/go/bin
           echo ::add-path::/usr/local/go/bin
       - name: Verify Go Installment
         run: go version
@@ -50,6 +48,11 @@ jobs:
     runs-on: cc-gitrunner
     needs: [ setup , check-dependency ]
     steps:
+      - name: Add Go Path # Do this before all go commands
+        run: | 
+          echo ::set-env name=GOPATH::$HOME/go
+          echo ::add-path::$HOME/go/bin
+          echo ::add-path::/usr/local/go/bin
       - name: make app-layers
         run: |
           make app-layers
@@ -61,6 +64,11 @@ jobs:
     runs-on: cc-gitrunner
     needs: [ setup , check-dependency ]
     steps:
+      - name: Add Go Path # Do this before all go commands
+        run: | 
+          echo ::set-env name=GOPATH::$HOME/go
+          echo ::add-path::$HOME/go/bin
+          echo ::add-path::/usr/local/go/bin
       - name: make store-layers
         run: |
           make store-layers
@@ -72,6 +80,11 @@ jobs:
     runs-on: cc-gitrunner
     needs: [ check-app-layers , check-store-layers ]
     steps:
+      - name: Add Go Path # Do this before all go commands
+        run: | 
+          echo ::set-env name=GOPATH::$HOME/go
+          echo ::add-path::$HOME/go/bin
+          echo ::add-path::/usr/local/go/bin
       - name: make check-style
         run: |
           make config-reset
@@ -105,7 +118,7 @@ jobs:
     steps:
       - name: npm run test-ci
         run: npm run test-ci
-        working-directory: ../mattermost-webapp
+        working-directory: ./mattermost-webapp
   
   build-webapp:
     name: Build WebApp
@@ -114,7 +127,7 @@ jobs:
     steps:
       - name: make build
         run: make build
-        working-directory: ../mattermost-webapp
+        working-directory: ./mattermost-webapp
 
   # test-server:
   #   name: Test Server
