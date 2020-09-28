@@ -75,7 +75,7 @@ jobs:
       - name: make check-style
         run: |
           make config-reset
-          make check-style BUILD_NUMBER='${{CIRCLE_BRANCH}}-${{CIRCLE_BUILD_NUM}}' MM_NO_ENTERPRISE_LINT=true
+          make check-style BUILD_NUMBER='${{env.CIRCLE_BRANCH}}-${{env.CIRCLE_BUILD_NUM}}' MM_NO_ENTERPRISE_LINT=true
         working-directory: ./mattermost-server
 
   setup-webapp:
@@ -86,7 +86,7 @@ jobs:
       - name: Clone Repository
         uses: actions/checkout@v2
         with:
-          repository: ${{CASUAL_CHAT_ORG}}/mattermost-webapp
+          repository: ${{env.CASUAL_CHAT_ORG}}/mattermost-webapp
           ref: master
           path: ./mattermost-webapp
       - name: Export Git Commit
