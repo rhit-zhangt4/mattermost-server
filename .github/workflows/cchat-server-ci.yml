@@ -32,25 +32,25 @@ jobs:
       - name: Verify npm Installment
         run: npm -v
 
-  # check-app-layers:
-  #   name: Check App Layers
-  #   runs-on: cc-runner
-  #   needs: [ check-env ]
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v2
-  #       with:
-  #         path: ./mattermost-server
-  #     - name: Add Go Path # Do this before all go commands
-  #       run: | 
-  #         echo ::set-env name=GOPATH::$HOME/go
-  #         echo ::add-path::$HOME/go/bin
-  #         echo ::add-path::/usr/local/go/bin
-  #     - name: Check App Layers
-  #       run: |
-  #         make app-layers
-  #         if [[ -n $(git status --porcelain) ]]; then echo "Please update the app layers using make app-layers"; exit 1; fi
-  #       working-directory: ./mattermost-server
+  check-app-layers:
+    name: Check App Layers
+    runs-on: cc-runner
+    needs: [ check-env ]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          path: ./mattermost-server
+      - name: Add Go Path # Do this before all go commands
+        run: | 
+          echo ::set-env name=GOPATH::$HOME/go
+          echo ::add-path::$HOME/go/bin
+          echo ::add-path::/usr/local/go/bin
+      - name: Check App Layers
+        run: |
+          make app-layers
+          if [[ -n $(git status --porcelain) ]]; then echo "Please update the app layers using make app-layers"; exit 1; fi
+        working-directory: ./mattermost-server
 
   # check-store-layers:
   #   name: Check Store Layers
