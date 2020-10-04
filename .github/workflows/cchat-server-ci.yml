@@ -89,7 +89,7 @@ jobs:
           echo ::add-path::$HOME/go/bin
           echo ::add-path::/usr/local/go/bin
       - name: Install mattermost-govet
-        run: GO111MODULE=off GOBIN=./bin go get -u github.com/mattermost/mattermost-govet
+        run: GO111MODULE=off GOBIN=$(pwd)/bin go get -u github.com/mattermost/mattermost-govet
         working-directory: ./mattermost-server
       - name: Check Style
         run: |
@@ -133,9 +133,9 @@ jobs:
     steps:
       - name: Setup Webapp Repository Name
         run: | 
-          echo $GITHUB_REPOSITORY
-          echo ::set-env name=CC_WEBAPP_REPOSITORY::${$GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp
-          echo $CC_WEBAPP_REPOSITORY
+          echo "Server Repository: $GITHUB_REPOSITORY"
+          echo ::set-env name=CC_WEBAPP_REPOSITORY::${GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp
+          echo "Webapp Repository: $CC_WEBAPP_REPOSITORY"
       - name: Checkout Webapp Repository
         uses: actions/checkout@v2
         with:
