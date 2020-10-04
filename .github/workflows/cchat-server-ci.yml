@@ -158,6 +158,24 @@ jobs:
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; ls; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
         working-directory: ./mattermost-server
+      - name: Capture docker logs
+        if: always()
+        run: |
+            mkdir -p logs
+            docker-compose logs --tail="all" -t --no-color > logs/docker-compose_logs
+            docker ps -a --no-trunc > logs/docker_ps
+            docker stats -a --no-stream > logs/docker_stats
+            tar -czvf logs/docker_logs.tar.gz logs/docker-compose_logs logs/docker_ps logs/docker_stats
+        working-directory: ./mattermost-server/build  
+      - name: Upload docker logs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker-logs-test-mysql
+          path: |
+            mattermost-server/build/logs/docker-compose_logs
+            mattermost-server/build/logs/logs/docker_ps
+            mattermost-server/build/logs/docker_stats
       - name: Find Test Report
         id: find_test_report
         run: test -f report.xml
