@@ -134,7 +134,7 @@ jobs:
         run: |
           ulimit -n 8096
           mkdir -p mattermost-server/client/plugins
-          docker run -it --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
+          docker run -i --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
             --env TEST_DATABASE_MYSQL_DSN="mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s" \
             --env TEST_DATABASE_POSTGRESQL_DSN="postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10" \
             --env TEST_DATABASE_MYSQL_ROOT_PASSWD=mostest \
@@ -156,11 +156,14 @@ jobs:
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
         working-directory: ./mattermost-server
+      - name: Find Test Report
+        id: find_test_report
+        run: test -f report.xml
       - name: Generate Html Report (mysql)
         run: |
           xunit-viewer -r report.xml -o report-mysql.html
           cp -T report.xml report-mysql.xml
-        if: always()
+        if: steps.find_test_report.outcome == 'success'
         working-directory: ./mattermost-server
       - name: Stop Docker
         run: |
@@ -170,7 +173,7 @@ jobs:
         if: always()
       - name: Upload Test Report
         uses: actions/upload-artifact@v2
-        if: always()
+        if: steps.find_test_report.outcome == 'success'
         with:
           name: server-test-results(mysql)
           path: |
