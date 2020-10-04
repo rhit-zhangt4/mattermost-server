@@ -121,38 +121,38 @@ jobs:
   #           report.xml
   #           report.html
       
-  # check-webapp-type:
-  #   name: Check Type
-  #   runs-on: cc-runner
-  #   needs: [ check-env ]
-  #   steps:
-  #     - name: Setup Webapp Repository Name
-  #     - run: | 
-  #         echo ::set-env name=CC_WEBAPP_REPOSITORY::${${{ env.GITHUB_REPOSITORY }}%%/mattermost-server}/mattermost-webapp
-  #         echo $CC_WEBAPP_REPOSITORY
-  #     - name: Checkout Webapp Repository
-  #       uses: actions/checkout@v2
-  #       with:
-  #         repository: ${{ env.CC_WEBAPP_REPOSITORY }}
-  #         path: ./mattermost-webapp
-  #     - name: Cache node modules
-  #       uses: actions/cache@v2
-  #       env:
-  #         cache-name: cache-node-modules
-  #       with:
-  #         # npm cache files are stored in `~/.npm` on Linux/macOS
-  #         path: ~/.npm
-  #         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-build-${{ env.cache-name }}-
-  #           ${{ runner.os }}-build-
-  #           ${{ runner.os }}-
-  #     - name: Install Dependency
-  #       run: npm ci
-  #       working-directory: ./mattermost-webapp
-  #     - name: Check Type
-  #       run: npm run check-types
-  #       working-directory: ./mattermost-webapp
+  check-webapp-type:
+    name: Check Type
+    runs-on: cc-runner
+    needs: [ check-env ]
+    steps:
+      - name: Setup Webapp Repository Name
+      - run: | 
+          echo ::set-env name=CC_WEBAPP_REPOSITORY::${${{ env.GITHUB_REPOSITORY }}%%/mattermost-server}/mattermost-webapp
+          echo $CC_WEBAPP_REPOSITORY
+      - name: Checkout Webapp Repository
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.CC_WEBAPP_REPOSITORY }}
+          path: ./mattermost-webapp
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install Dependency
+        run: npm ci
+        working-directory: ./mattermost-webapp
+      - name: Check Type
+        run: npm run check-types
+        working-directory: ./mattermost-webapp
 
   # test:
   #   name: Unit Test
