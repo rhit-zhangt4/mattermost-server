@@ -107,8 +107,10 @@ jobs:
     runs-on: cc-runner
     needs: [check-env] #[ check-server-style , check-app-layers , check-store-layers ]
     steps:
-      - name: Export Build Number
-        run: echo ::set-env name=BUILD_NUMBER::$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER
+      - name: Export Environment Variables
+        run: |
+          echo ::set-env name=BUILD_NUMBER::$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER
+          echo ::set-env name=WORKING_ROOT_DIRECTORY::$(pwd)
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
@@ -150,9 +152,9 @@ jobs:
             --env MM_ELASTICSEARCHSETTINGS_CONNECTIONURL=http://elasticsearch:9200 \
             --env MM_SQLSETTINGS_DATASOURCE="mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8" \
             --env MM_SQLSETTINGS_DRIVERNAME=mysql \
-            --env GOBIN=$(pwd)/bin \
+            --env GOBIN=${{ env.WORKING_ROOT_DIRECTORY }}/mattermost-server/bin \
             -v ~/mattermost:/mattermost \
-            -w $(pwd) \
+            -w ${{ env.WORKING_ROOT_DIRECTORY }}/mattermost-server \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
         working-directory: ./mattermost-server
