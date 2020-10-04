@@ -156,7 +156,7 @@ jobs:
             -v ~/mattermost:/mattermost \
             -w ${{ env.WORKING_ROOT_DIRECTORY }}/mattermost-server \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
-            bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
+            bash -c 'ulimit -n 8096; ls; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
         working-directory: ./mattermost-server
       - name: Find Test Report
         id: find_test_report
