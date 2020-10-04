@@ -25,8 +25,6 @@ jobs:
         run: make -version
       - name: Verify golangci-lint Installment
         run: golangci-lint version
-      - name: Verify mattermost-govet Installment
-        run: mattermost-govet help
       - name: Verify node Installment
         run: node -v
       - name: Verify npm Installment
@@ -97,45 +95,44 @@ jobs:
           make check-style BUILD_NUMBER='${{env.CC_BUILD_PREFIX}}${{env.GITHUB_RUN_NUMBER}}' MM_NO_ENTERPRISE_LINT=true
         working-directory: ./mattermost-server
 
-  # test-server:
-  #   name: Test Server
-  #   runs-on: cc-runner
-  #   needs: [ check-server-style , check-app-layers , check-store-layers ]
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v2
-  #       with:
-  #         path: ./mattermost-server
-  #     - name: Add Go Path # Do this before all go commands
-  #       run: | 
-  #         echo ::set-env name=GOPATH::$HOME/go
-  #         echo ::add-path::$HOME/go/bin
-  #         echo ::add-path::/usr/local/go/bin
-  #     - name: Test Server
-  #       run: |
-  #         make test-server
-  #       working-directory: ./mattermost-server
-  #     - name: Generate Junit Report
-  #       run: xunit-viewer -r report.xml -o report.html
-  #       working-directory: ./mattermost-server
-  #     - name: Upload Test Report
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: server-test-results
-  #         path: |
-  #           report.xml
-  #           report.html
+  test-server:
+    name: Test Server
+    runs-on: cc-runner
+    needs: [ check-server-style , check-app-layers , check-store-layers ]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          path: ./mattermost-server
+      - name: Add Go Path # Do this before all go commands
+        run: | 
+          echo ::set-env name=GOPATH::$HOME/go
+          echo ::add-path::$HOME/go/bin
+          echo ::add-path::/usr/local/go/bin
+      - name: Test Server
+        run: |
+          make test-server
+        working-directory: ./mattermost-server
+      - name: Generate Html Report
+        run: xunit-viewer -r report.xml -o report.html
+        working-directory: ./mattermost-server
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: server-test-results
+          path: |
+            mattermost-server/report.xml
+            mattermost-server/report.html
       
   check-webapp-type:
     name: Check Webapp Type
     runs-on: cc-runner
     needs: [ check-env ]
     steps:
-      - name: Setup Webapp Repository Name
+      - name: Export Webapp Repository Name
         run: | 
           echo "Server Repository: $GITHUB_REPOSITORY"
           echo ::set-env name=CC_WEBAPP_REPOSITORY::${GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp
-          echo "Webapp Repository: $CC_WEBAPP_REPOSITORY"
       - name: Checkout Webapp Repository
         uses: actions/checkout@v2
         with:
@@ -160,43 +157,53 @@ jobs:
         run: npm run check-types
         working-directory: ./mattermost-webapp
 
-  # test:
-  #   name: Unit Test
-  #   runs-on: cc-runner
-  #   needs: [ check-style , check-type , check-i18n]
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v2
-  #     - name: Cache node modules
-  #       uses: actions/cache@v2
-  #       env:
-  #         cache-name: cache-node-modules
-  #       with:
-  #         # npm cache files are stored in `~/.npm` on Linux/macOS
-  #         path: ~/.npm
-  #         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-build-${{ env.cache-name }}-
-  #           ${{ runner.os }}-build-
-  #           ${{ runner.os }}-
-  #     - name: Install Dependency
-  #       run: npm ci
-  #     - name: Test
-  #       run: npm run test-ci 
-  #     - name: Generate HTML Report
-  #       run: xunit-viewer -r build/test-results.xml -o build/test-results.html
-  #     - name: Upload Test Report
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: webapp-test-results
-  #         path: |
-  #           build/test-results.xml
-  #           build/test-results.html
+  test-webapp:
+    name: Test Webapp
+    runs-on: cc-runner
+    needs: [ check-webapp-type ]
+    steps:
+      - name: Export Webapp Repository Name
+        run: | 
+          echo "Server Repository: $GITHUB_REPOSITORY"
+          echo ::set-env name=CC_WEBAPP_REPOSITORY::${GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp
+      - name: Checkout Webapp Repository
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.CC_WEBAPP_REPOSITORY }}
+          path: ./mattermost-webapp
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install Dependency
+        run: npm ci
+        working-directory: ./mattermost-webapp
+      - name: Test
+        run: npm run test-ci 
+        working-directory: ./mattermost-webapp
+      - name: Generate HTML Report
+        run: xunit-viewer -r build/test-results.xml -o build/test-results.html
+        working-directory: ./mattermost-webapp
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: webapp-test-results
+          path: |
+            mattermost-webapp/build/test-results.xml
+            mattermost-webapp/build/test-results.html
 
   # build:
   #   name: Build
   #   runs-on: cc-runner
-  #   needs: [ test ]
+  #   needs: [ test-server , test-webapp ]
   #   steps:
   #     - name: Checkout Repository
   #       uses: actions/checkout@v2
