@@ -52,45 +52,45 @@ jobs:
           if [[ -n $(git status --porcelain) ]]; then echo "Please update the app layers using make app-layers"; exit 1; fi
         working-directory: ./mattermost-server
 
-  # check-store-layers:
-  #   name: Check Store Layers
-  #   runs-on: cc-runner
-  #   needs: [ check-env ]
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v2
-  #       with:
-  #         path: ./mattermost-server
-  #     - name: Add Go Path # Do this before all go commands
-  #       run: | 
-  #         echo ::set-env name=GOPATH::$HOME/go
-  #         echo ::add-path::$HOME/go/bin
-  #         echo ::add-path::/usr/local/go/bin
-  #     - name: Check Store Layers
-  #       run: |
-  #         make store-layers
-  #         if [[ -n $(git status --porcelain) ]]; then echo "Please update the store layers using make store-layers"; exit 1; fi
-  #       working-directory: ./mattermost-server
+  check-store-layers:
+    name: Check Store Layers
+    runs-on: cc-runner
+    needs: [ check-env ]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          path: ./mattermost-server
+      - name: Add Go Path # Do this before all go commands
+        run: | 
+          echo ::set-env name=GOPATH::$HOME/go
+          echo ::add-path::$HOME/go/bin
+          echo ::add-path::/usr/local/go/bin
+      - name: Check Store Layers
+        run: |
+          make store-layers
+          if [[ -n $(git status --porcelain) ]]; then echo "Please update the store layers using make store-layers"; exit 1; fi
+        working-directory: ./mattermost-server
   
-  # check-server-style:
-  #   name: Check Server Style
-  #   runs-on: cc-runner
-  #   needs: [ check-env ]
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v2
-  #       with:
-  #         path: ./mattermost-server
-  #     - name: Add Go Path # Do this before all go commands
-  #       run: | 
-  #         echo ::set-env name=GOPATH::$HOME/go
-  #         echo ::add-path::$HOME/go/bin
-  #         echo ::add-path::/usr/local/go/bin
-  #     - name: Check Style
-  #       run: |
-  #         make config-reset
-  #         make check-style BUILD_NUMBER='${{env.CC_BUILD_PREFIX}}${{env.GITHUB_RUN_NUMBER}}' MM_NO_ENTERPRISE_LINT=true
-  #       working-directory: ./mattermost-server
+  check-server-style:
+    name: Check Server Style
+    runs-on: cc-runner
+    needs: [ check-env ]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          path: ./mattermost-server
+      - name: Add Go Path # Do this before all go commands
+        run: | 
+          echo ::set-env name=GOPATH::$HOME/go
+          echo ::add-path::$HOME/go/bin
+          echo ::add-path::/usr/local/go/bin
+      - name: Check Style
+        run: |
+          make config-reset
+          make check-style BUILD_NUMBER='${{env.CC_BUILD_PREFIX}}${{env.GITHUB_RUN_NUMBER}}' MM_NO_ENTERPRISE_LINT=true
+        working-directory: ./mattermost-server
 
   # test-server:
   #   name: Test Server
