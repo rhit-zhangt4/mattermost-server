@@ -31,6 +31,8 @@ jobs:
         run: npm -v
       - name: Verify xunit-viewer Installment
         run: xunit-viewer --version
+      - name: Verify docker-compose Installment
+        run: docker-compose version
 
   check-app-layers:
     name: Check App Layers
@@ -77,6 +79,8 @@ jobs:
     runs-on: cc-runner
     needs: [ check-env ]
     steps:
+      - name: Export Build Number
+        run: echo ::set-env name=BUILD_NUMBER::$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
@@ -92,7 +96,7 @@ jobs:
       - name: Check Style
         run: |
           make config-reset
-          make check-style BUILD_NUMBER='${{env.CC_BUILD_PREFIX}}${{env.GITHUB_RUN_NUMBER}}' MM_NO_ENTERPRISE_LINT=true
+          make check-style MM_NO_ENTERPRISE_LINT=true
         working-directory: ./mattermost-server
 
   test-server:
@@ -201,12 +205,30 @@ jobs:
             mattermost-webapp/build/test-results.html
 
   # build:
-  #   name: Build
+  #   name: Build and Package
   #   runs-on: cc-runner
   #   needs: [ test-server , test-webapp ]
   #   steps:
-  #     - name: Checkout Repository
+  #     - name: Export Webapp Repository Name
+  #       run: | 
+  #         echo "Server Repository: $GITHUB_REPOSITORY"
+  #         echo ::set-env name=CC_WEBAPP_REPOSITORY::${GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp
+  #     - name: Export Build Number
+  #       run: echo ::set-env name=BUILD_NUMBER::$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER
+  #     - name: Checkout Webapp Repository
   #       uses: actions/checkout@v2
+  #       with:
+  #         repository: ${{ env.CC_WEBAPP_REPOSITORY }}
+  #         path: ./mattermost-webapp
+  #     - name: Checkout Server Repository
+  #       uses: actions/checkout@v2
+  #       with:
+  #         path: ./mattermost-server
+  #     - name: Add Go Path # Do this before all go commands
+  #       run: | 
+  #         echo ::set-env name=GOPATH::$HOME/go
+  #         echo ::add-path::$HOME/go/bin
+  #         echo ::add-path::/usr/local/go/bin
   #     - name: Cache node modules
   #       uses: actions/cache@v2
   #       env:
@@ -223,37 +245,36 @@ jobs:
   #       run: |
   #         npm ci
   #         cd node_modules/mattermost-redux && npm i && npm run build
-  #     - name: Build
+  #       working-directory: ./mattermost-webapp
+  #     - name: Build Webapp
   #       run: npm run build 
-  #     - name: Upload Webapp
+  #       working-directory: ./mattermost-webapp
+  #     - name: Setting up Enterprise Environment
+  #       run: |
+  #         rm -rf enterprise
+  #         mkdir -p enterprise/imports
+  #         cp -T mattermost-server/imports/placeholder.go enterprise/imports/imports.go
+  #     - name: Build Server
+  #       run: make build-cmd
+  #       working-directory: ./mattermost-server
+  #     - name: Package
+  #       run: make package
+  #       working-directory: ./mattermost-server
+  #     - name: Upload Windows Package
   #       uses: actions/upload-artifact@v2
   #       with:
-  #         name: casualchat-mattermost-webapp
-  #         path: dist/
-#  build:
-#    name: Build
-#    runs-on: ubuntu-latest
-#    steps:
-
-#    - name: Set up Go 1.x
-#      uses: actions/setup-go@v2
-#      with:
-#        go-version: ^1.13
-#      id: go
-
-#    - name: Check out code into the Go module directory
-#      uses: actions/checkout@v2
-
-#    - name: Get dependencies
-#      run: |
-#        go get -v -t -d ./...
-#        if [ -f Gopkg.toml ]; then
-#            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-#            dep ensure
-#        fi
-
-#    - name: Build
-#      run: go build -v .
-
-#    - name: Test
-#      run: go test -v .
+  #         name: cchat-server-windows
+  #         path: |
+  #           mattermost-server/dist
+  #     - name: Upload Linux Package
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: cchat-server-linux
+  #         path: |
+  #           mattermost-server/dist
+  #     - name: Upload OSX Package
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: cchat-server-osx
+  #         path: |
+  #           mattermost-server/dist
