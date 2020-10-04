@@ -122,12 +122,12 @@ jobs:
   #           report.html
       
   check-webapp-type:
-    name: Check Type
+    name: Check Webapp Type
     runs-on: cc-runner
     needs: [ check-env ]
     steps:
       - name: Setup Webapp Repository Name
-      - run: | 
+        run: | 
           echo ::set-env name=CC_WEBAPP_REPOSITORY::${${{ env.GITHUB_REPOSITORY }}%%/mattermost-server}/mattermost-webapp
           echo $CC_WEBAPP_REPOSITORY
       - name: Checkout Webapp Repository
