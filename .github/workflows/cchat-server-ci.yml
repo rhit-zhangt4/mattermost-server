@@ -104,7 +104,7 @@ jobs:
   test-server:
     name: Test Server
     runs-on: cc-runner
-    needs: [ check-server-style , check-app-layers , check-store-layers ]
+    needs: [check-env] #[ check-server-style , check-app-layers , check-store-layers ]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
