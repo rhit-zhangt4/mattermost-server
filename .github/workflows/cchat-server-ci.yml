@@ -152,11 +152,11 @@ jobs:
             --env MM_ELASTICSEARCHSETTINGS_CONNECTIONURL=http://elasticsearch:9200 \
             --env MM_SQLSETTINGS_DATASOURCE="mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8" \
             --env MM_SQLSETTINGS_DRIVERNAME=mysql \
-            --env GOBIN=${{ env.WORKING_ROOT_DIRECTORY }}/mattermost-server/bin \
-            -v / \
-            -w ${{ env.WORKING_ROOT_DIRECTORY }}/mattermost-server \
+            --env GOBIN=/mattermost/mattermost-server/bin \
+            -v ${{ env.WORKING_ROOT_DIRECTORY }}:/mattermost \
+            -w /mattermost/mattermost-server \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
-            bash -c 'ulimit -n 8096; ls; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
+            bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
         working-directory: ./mattermost-server
       - name: Capture docker logs
         if: always()
