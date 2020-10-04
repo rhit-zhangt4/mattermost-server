@@ -160,46 +160,24 @@ jobs:
         run: |
           xunit-viewer -r report.xml -o report-mysql.html
           cp -T report.xml report-mysql.xml
+        if: always()
         working-directory: ./mattermost-server
-      - name: Test Server (postgres)
+      - name: Stop Docker
         run: |
-          ulimit -n 8096
-          mkdir -p mattermost-server/client/plugins
-          docker run -it --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
-            --env TEST_DATABASE_MYSQL_DSN="mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s" \
-            --env TEST_DATABASE_POSTGRESQL_DSN="postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10" \
-            --env TEST_DATABASE_MYSQL_ROOT_PASSWD=mostest \
-            --env CI_INBUCKET_HOST=inbucket \
-            --env CI_MINIO_HOST=minio \
-            --env CI_INBUCKET_PORT=10080 \
-            --env CI_MINIO_PORT=9000 \
-            --env CI_INBUCKET_SMTP_PORT=10025 \
-            --env CI_LDAP_HOST=openldap \
-            --env IS_CI="true" \
-            --env MM_EMAILSETTINGS_SMTPSERVER=inbucket \
-            --env MM_EMAILSETTINGS_SMTPPORT=10025 \
-            --env MM_ELASTICSEARCHSETTINGS_CONNECTIONURL=http://elasticsearch:9200 \
-            --env MM_SQLSETTINGS_DATASOURCE="postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10" \
-            --env MM_SQLSETTINGS_DRIVERNAME=postgres \
-            --env GOBIN=/mattermost/mattermost-server/bin \
-            -v ~/mattermost:/mattermost \
-            -w /mattermost/mattermost-server \
-            mattermost/mattermost-build-server:20200731_golang-1.14.6 \
-            bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
-        working-directory: ./mattermost-server
-      - name: Generate Html Report (postgres)
-        run: |
-          xunit-viewer -r report.xml -o report-postgres.html
-          cp -T report.xml report-postgres.xml
+          docker stop $(docker ps -aq)
+          docker rm $(docker ps -aq)
+          docker network rm ${{ env.COMPOSE_PROJECT_NAME }}_mm-test
+        if: always()
       - name: Upload Test Report
         uses: actions/upload-artifact@v2
+        if: always()
         with:
-          name: server-test-results
+          name: server-test-results(mysql)
           path: |
             mattermost-server/report-mysql.xml
             mattermost-server/report-mysql.html
-            mattermost-server/report-postgres.html
-            mattermost-server/report-postgres.html
+
+
       
   # check-webapp-type:
   #   name: Check Webapp Type
