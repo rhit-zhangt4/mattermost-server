@@ -31,6 +31,8 @@ jobs:
         run: node -v
       - name: Verify npm Installment
         run: npm -v
+      - name: Verify xunit-viewer Installment
+        run: xunit-viewer --version
 
   check-app-layers:
     name: Check App Layers
@@ -128,7 +130,7 @@ jobs:
     steps:
       - name: Setup Webapp Repository Name
         run: | 
-          echo ::set-env name=CC_WEBAPP_REPOSITORY::${${{ env.GITHUB_REPOSITORY }}%%/mattermost-server}/mattermost-webapp
+          echo ::set-env name=CC_WEBAPP_REPOSITORY::${$GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp
           echo $CC_WEBAPP_REPOSITORY
       - name: Checkout Webapp Repository
         uses: actions/checkout@v2
