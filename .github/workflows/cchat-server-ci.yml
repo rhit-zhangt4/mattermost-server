@@ -36,6 +36,8 @@ jobs:
         run: docker version
       - name: Verify docker-compose Installment
         run: docker-compose version
+      - name: Clean Environment
+        run: rm -rf *
 
   # check-app-layers:
   #   name: Check App Layers
@@ -257,7 +259,7 @@ jobs:
           - {
             DRIVER_NAME: postgres,
             MIGRATED_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/migrated?sslmode=disable&connect_timeout=10",
-            LATEST_DATE_SOURCE: "postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10",
+            LATEST_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10",
             CREATE_CMD: postgres sh -c 'exec echo "CREATE DATABASE migrated; CREATE DATABASE latest;" | exec psql -U mmuser mattermost_test',
             DB_IMPORT_CMD: postgres psql -U mmuser -d migrated < ../scripts/mattermost-postgresql-5.0.sql,
             POST_RUN: echo "There is no known Postgres mismatch",
