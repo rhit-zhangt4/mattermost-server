@@ -107,7 +107,7 @@ jobs:
   test-server: # Run go tests 
     name: Test Server
     runs-on: self-hosted
-    needs: [test-schema] #[ check-server-style , check-app-layers , check-store-layers ]
+    needs: [check-env] #[ check-server-style , check-app-layers , check-store-layers ]
     strategy: # Server tests need to run in 2 environments
       fail-fast: false # Always run both tests even when 1 fails
       matrix:
