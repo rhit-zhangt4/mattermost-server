@@ -12,7 +12,11 @@ GOBIN=$6
 
 PACKAGES_COMMA=$(echo $PACKAGES | tr ' ' ',')
 
-echo "Packages to test: $PACKAGES"
+echo "Packages to test:"
+for p in $PACKAGES
+do
+  echo $p
+done
 find . -name 'cprofile*.out' -exec sh -c 'rm "{}"' \;
 find . -type d -name data -not -path './vendor/*' -not -path './data' | xargs rm -rf
 
