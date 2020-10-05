@@ -102,24 +102,39 @@ jobs:
   #         make check-style MM_NO_ENTERPRISE_LINT=true
   #       working-directory: ./mattermost-server
 
-  test-server:
+  test-server: # Run go tests 
     name: Test Server
     runs-on: cc-runner
     needs: [check-env] #[ check-server-style , check-app-layers , check-store-layers ]
+    strategy: # Server tests need to run in 2 environments
+      matrix:
+        dbparams:
+          - {
+            DRIVER_NAME: mysql,
+            DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8"
+          }
+          - {
+            DRIVER_NAME: postgres,
+            DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10"
+          }
     steps:
+
       - name: Export Environment Variables
         run: |
           echo ::set-env name=BUILD_NUMBER::$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER
           echo ::set-env name=WORKING_ROOT_DIRECTORY::$(pwd)
+
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
           path: ./mattermost-server
-      - name: Add Go Path # Do this before all go commands
+
+      - name: Add Go Path 
         run: | 
           echo ::set-env name=GOPATH::$HOME/go
           echo ::add-path::$HOME/go/bin
           echo ::add-path::/usr/local/go/bin
+
       - name: Run docker-compose
         run: |
           cd mattermost-server/build
@@ -127,12 +142,14 @@ jobs:
           cat ../tests/test-data.ldif | docker-compose --no-ansi exec -T openldap bash -c 'ldapadd -x -D "cn=admin,dc=mm,dc=test,dc=com" -w mostest';
           docker-compose --no-ansi exec -T minio sh -c 'mkdir -p /data/mattermost-test';
           docker-compose --no-ansi ps
+
       - name: Wait for docker-compose
         run: |
           sleep 5
           docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
           docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
-      - name: Test Server (mysql)
+
+      - name: Test Server - (${{ matrix.dbparams.DRIVER_NAME }})
         run: |
           ulimit -n 8096
           mkdir -p client/plugins
@@ -150,14 +167,16 @@ jobs:
             --env MM_EMAILSETTINGS_SMTPSERVER=inbucket \
             --env MM_EMAILSETTINGS_SMTPPORT=10025 \
             --env MM_ELASTICSEARCHSETTINGS_CONNECTIONURL=http://elasticsearch:9200 \
-            --env MM_SQLSETTINGS_DATASOURCE="mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8" \
-            --env MM_SQLSETTINGS_DRIVERNAME=mysql \
+            --env MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.DATA_SOURCE }}" \
+            --env MM_SQLSETTINGS_DRIVERNAME=${{ matrix.dbparams.DRIVER_NAME }} \
             --env GOBIN=/mattermost/mattermost-server/bin \
             -v ${{ env.WORKING_ROOT_DIRECTORY }}:/mattermost \
             -w /mattermost/mattermost-server \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
         working-directory: ./mattermost-server
+        timeout-minutes: 60
+
       - name: Capture docker logs
         if: always()
         run: |
@@ -167,40 +186,47 @@ jobs:
             docker stats -a --no-stream > logs/docker_stats
             tar -czvf logs/docker_logs.tar.gz logs/docker-compose_logs logs/docker_ps logs/docker_stats
         working-directory: ./mattermost-server/build  
-      - name: Upload docker logs
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: docker-logs-test-mysql
-          path: |
-            mattermost-server/build/logs/docker-compose_logs
-            mattermost-server/build/logs/logs/docker_ps
-            mattermost-server/build/logs/docker_stats
+
       - name: Find Test Report
         id: find_test_report
         run: test -f report.xml
         if: always()
         working-directory: ./mattermost-server
-      - name: Generate Html Report (mysql)
+
+      - name: Generate Html Report
         run: |
-          xunit-viewer -r report.xml -o report-mysql.html
-          cp -T report.xml report-mysql.xml
+          xunit-viewer -r report.xml -o report.html
         if: steps.find_test_report.outcome == 'success'
         working-directory: ./mattermost-server
+
+      - name: Upload Test Logs and Reports - (${{ matrix.dbparams.DRIVER_NAME }})
+        if: steps.find_test_report.outcome == 'success'
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-artifacts-${{ matrix.dbparams.DRIVER_NAME }}
+          path: |
+            mattermost-server/build/logs/docker-compose_logs
+            mattermost-server/build/logs/logs/docker_ps
+            mattermost-server/build/logs/docker_stats
+            mattermost-server/report.xml
+            mattermost-server/report.html
+
+      - name: Upload Test Logs Only - (${{ matrix.dbparams.DRIVER_NAME }})
+        if: steps.find_test_report.outcome != 'success'
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-artifacts-${{ matrix.dbparams.DRIVER_NAME }}
+          path: |
+            mattermost-server/build/logs/docker-compose_logs
+            mattermost-server/build/logs/logs/docker_ps
+            mattermost-server/build/logs/docker_stats
+
       - name: Stop Docker
         run: |
           docker stop $(docker ps -aq)
           docker rm $(docker ps -aq)
           docker network rm ${{ env.COMPOSE_PROJECT_NAME }}_mm-test
         if: always()
-      - name: Upload Test Report
-        uses: actions/upload-artifact@v2
-        if: steps.find_test_report.outcome == 'success'
-        with:
-          name: server-test-results(mysql)
-          path: |
-            mattermost-server/report-mysql.xml
-            mattermost-server/report-mysql.html
 
 
       
