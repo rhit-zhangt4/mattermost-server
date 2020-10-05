@@ -54,7 +54,7 @@ jobs:
           echo "GO_PATH=$HOME/go" >> $GITHUB_ENV
           echo "$HOME/go/bin" >> $GITHUB_PATH
           echo "/usr/local/go/bin" >> $GITHUB_PATH
-          
+
       - name: Check App Layers
         run: |
           make app-layers
@@ -549,7 +549,7 @@ jobs:
           echo "CC_WEBAPP_REPOSITORY=${GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp" >> $GITHUB_ENV
 
       - name: Export Build Number
-          echo "BUILD_NUMBER=$CC_BUILD_PREFIX$$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
+        run: echo "BUILD_NUMBER=$CC_BUILD_PREFIX$$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
 
       - name: Checkout Webapp Repository
         uses: actions/checkout@v2
