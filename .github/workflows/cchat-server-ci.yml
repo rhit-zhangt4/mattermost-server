@@ -133,7 +133,7 @@ jobs:
       - name: Export Environment Variables
         run: |
           echo "BUILD_NUMBER=$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
-          echo "WORK_ROOT_PATH=$(pwd)"  >> $GITHUB_PATH
+          echo "WORK_ROOT_PATH=$(pwd)"  >> $GITHUB_ENV
 
       - name: Checkout Repository
         uses: actions/checkout@v2
