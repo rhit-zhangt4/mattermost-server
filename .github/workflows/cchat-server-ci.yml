@@ -116,10 +116,10 @@ jobs:
             DRIVER_NAME: mysql,
             DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8"
           }
-          - {
-            DRIVER_NAME: postgres,
-            DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10"
-          }
+          # - {
+          #   DRIVER_NAME: postgres,
+          #   DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10"
+          # }
     steps:
       - name: Export Environment Variables
         run: |
@@ -180,7 +180,6 @@ jobs:
             --env GOBIN=/mattermost/mattermost-server/bin \
             -v ${{ env.WORKING_ROOT_DIRECTORY }}:/mattermost \
             -w /mattermost/mattermost-server \
-            -u "$(id -u):$(id -g)" \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
         working-directory: ./mattermost-server
@@ -237,117 +236,117 @@ jobs:
         if: always()
         working-directory: ./mattermost-server
 
-  test-schema:
-    name: Test Schema Migration
-    runs-on: self-hosted
-    needs: [ check-env ] #[ check-server-style , check-app-layers , check-store-layers ]
-    strategy: # Server tests need to run in 2 environments
-      fail-fast: false # Always run both tests even when 1 fails
-      matrix:
-        dbparams:
-          - {
-            DRIVER_NAME: mysql,
-            MIGRATED_DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/migrated?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
-            LATEST_DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/latest?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
-            CREATE_CMD: mysql mysql -uroot -pmostest -e "CREATE DATABASE migrated; CREATE DATABASE latest; GRANT ALL PRIVILEGES ON migrated.* TO mmuser; GRANT ALL PRIVILEGES ON latest.* TO mmuser",
-            DB_IMPORT_CMD: mysql mysql -D migrated -uroot -pmostest < ../scripts/mattermost-mysql-5.0.sql,
-            POST_RUN: echo "Ignoring known MySQL mismatch ChannelMembers.SchemeGuest" && docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;" && docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;",
-            MIGRATED_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest migrated > migrated.sql,
-            LATEST_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest latest > latest.sql,
-            REMOVE_CMD: mysql mysql -uroot -pmostest -e 'DROP DATABASE migrated; DROP DATABASE latest',
-          }
-          - {
-            DRIVER_NAME: postgres,
-            MIGRATED_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/migrated?sslmode=disable&connect_timeout=10",
-            LATEST_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10",
-            CREATE_CMD: postgres sh -c 'exec echo "CREATE DATABASE migrated; CREATE DATABASE latest;" | exec psql -U mmuser mattermost_test',
-            DB_IMPORT_CMD: postgres psql -U mmuser -d migrated < ../scripts/mattermost-postgresql-5.0.sql,
-            POST_RUN: echo "There is no known Postgres mismatch",
-            MIGRATED_DUMP_CMD: postgres pg_dump --schema-only -d migrated -U mmuser > migrated.sql,
-            LATEST_DUMP_CMD: postgres pg_dump --schema-only -d latest -U mmuser > latest.sql,
-            REMOVE_CMD: postgres sh -c 'exec echo "DROP DATABASE migrated; DROP DATABASE latest;" | exec psql -U mmuser mattermost_test'
-          }
-    steps:
-      - name: Export Environment Variables
-        run: |
-          echo ::set-env name=BUILD_NUMBER::$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER
-          echo ::set-env name=WORKING_ROOT_DIRECTORY::$(pwd)
+  # test-schema:
+  #   name: Test Schema Migration
+  #   runs-on: self-hosted
+  #   needs: [ check-env ] #[ check-server-style , check-app-layers , check-store-layers ]
+  #   strategy: # Server tests need to run in 2 environments
+  #     fail-fast: false # Always run both tests even when 1 fails
+  #     matrix:
+  #       dbparams:
+  #         - {
+  #           DRIVER_NAME: mysql,
+  #           MIGRATED_DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/migrated?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
+  #           LATEST_DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/latest?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
+  #           CREATE_CMD: mysql mysql -uroot -pmostest -e "CREATE DATABASE migrated; CREATE DATABASE latest; GRANT ALL PRIVILEGES ON migrated.* TO mmuser; GRANT ALL PRIVILEGES ON latest.* TO mmuser",
+  #           DB_IMPORT_CMD: mysql mysql -D migrated -uroot -pmostest < ../scripts/mattermost-mysql-5.0.sql,
+  #           POST_RUN: echo "Ignoring known MySQL mismatch ChannelMembers.SchemeGuest" && docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;" && docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;",
+  #           MIGRATED_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest migrated > migrated.sql,
+  #           LATEST_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest latest > latest.sql,
+  #           REMOVE_CMD: mysql mysql -uroot -pmostest -e 'DROP DATABASE migrated; DROP DATABASE latest',
+  #         }
+  #         - {
+  #           DRIVER_NAME: postgres,
+  #           MIGRATED_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/migrated?sslmode=disable&connect_timeout=10",
+  #           LATEST_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10",
+  #           CREATE_CMD: postgres sh -c 'exec echo "CREATE DATABASE migrated; CREATE DATABASE latest;" | exec psql -U mmuser mattermost_test',
+  #           DB_IMPORT_CMD: postgres psql -U mmuser -d migrated < ../scripts/mattermost-postgresql-5.0.sql,
+  #           POST_RUN: echo "There is no known Postgres mismatch",
+  #           MIGRATED_DUMP_CMD: postgres pg_dump --schema-only -d migrated -U mmuser > migrated.sql,
+  #           LATEST_DUMP_CMD: postgres pg_dump --schema-only -d latest -U mmuser > latest.sql,
+  #           REMOVE_CMD: postgres sh -c 'exec echo "DROP DATABASE migrated; DROP DATABASE latest;" | exec psql -U mmuser mattermost_test'
+  #         }
+  #   steps:
+  #     - name: Export Environment Variables
+  #       run: |
+  #         echo ::set-env name=BUILD_NUMBER::$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER
+  #         echo ::set-env name=WORKING_ROOT_DIRECTORY::$(pwd)
 
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-        with:
-          path: ./mattermost-server
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v2
+  #       with:
+  #         path: ./mattermost-server
 
-      - name: Setup Enterprise Environment
-        run: |
-          rm -rf enterprise
-          mkdir -p enterprise/imports
-          cp -T mattermost-server/imports/placeholder.go enterprise/imports/imports.go
+  #     - name: Setup Enterprise Environment
+  #       run: |
+  #         rm -rf enterprise
+  #         mkdir -p enterprise/imports
+  #         cp -T mattermost-server/imports/placeholder.go enterprise/imports/imports.go
       
-      - name: Add Go Path 
-        run: | 
-          echo ::set-env name=GOPATH::$HOME/go
-          echo ::add-path::$HOME/go/bin
-          echo ::add-path::/usr/local/go/bin
+  #     - name: Add Go Path 
+  #       run: | 
+  #         echo ::set-env name=GOPATH::$HOME/go
+  #         echo ::add-path::$HOME/go/bin
+  #         echo ::add-path::/usr/local/go/bin
 
-      - name: Run docker-compose
-        run: |
-          cd mattermost-server/build
-          docker-compose --no-ansi run --rm start_dependencies
-          cat ../tests/test-data.ldif | docker-compose --no-ansi exec -T openldap bash -c 'ldapadd -x -D "cn=admin,dc=mm,dc=test,dc=com" -w mostest';
-          docker-compose --no-ansi exec -T minio sh -c 'mkdir -p /data/mattermost-test';
-          docker-compose --no-ansi ps
+  #     - name: Run docker-compose
+  #       run: |
+  #         cd mattermost-server/build
+  #         docker-compose --no-ansi run --rm start_dependencies
+  #         cat ../tests/test-data.ldif | docker-compose --no-ansi exec -T openldap bash -c 'ldapadd -x -D "cn=admin,dc=mm,dc=test,dc=com" -w mostest';
+  #         docker-compose --no-ansi exec -T minio sh -c 'mkdir -p /data/mattermost-test';
+  #         docker-compose --no-ansi ps
 
-      - name: Wait for docker-compose
-        run: |
-          sleep 5
-          docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
-          docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
+  #     - name: Wait for docker-compose
+  #       run: |
+  #         sleep 5
+  #         docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
+  #         docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
 
-      - name: Test Schema - (${{ matrix.dbparams.DRIVER_NAME }})
-        run: |
-          ulimit -n 8096
-          mkdir -p client/plugins
-          cd build
-          echo "Creating databases"
-          docker-compose --no-ansi exec -T ${{ matrix.dbparams.CREATE_CMD }}
-          echo "Importing ${{ matrix.dbparams.DRIVER_NAME }} dump from version 5.0"
-          docker-compose --no-ansi exec -T ${{ matrix.dbparams.DB_IMPORT_CMD }}
-          docker run -i --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
-            --env CI_INBUCKET_HOST=inbucket \
-            --env CI_MINIO_HOST=minio \
-            --env CI_INBUCKET_PORT=10080 \
-            --env CI_MINIO_PORT=9000 \
-            --env CI_INBUCKET_SMTP_PORT=10025 \
-            --env CI_LDAP_HOST=openldap \
-            --env IS_CI="true" \
-            --env MM_EMAILSETTINGS_SMTPSERVER=inbucket \
-            --env MM_EMAILSETTINGS_SMTPPORT=10025 \
-            --env MM_ELASTICSEARCHSETTINGS_CONNECTIONURL=http://elasticsearch:9200 \
-            --env MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.MIGRATED_DATA_SOURCE }}" \
-            --env MM_SQLSETTINGS_DRIVERNAME=${{ matrix.dbparams.DRIVER_NAME }} \
-            --env GOBIN=/mattermost/mattermost-server/bin \
-            -v ${{ env.WORKING_ROOT_DIRECTORY }}:/mattermost \
-            -w /mattermost/mattermost-server \
-            mattermost/mattermost-build-server:20200731_golang-1.14.6 \
-            bash -c 'ulimit -n 8096; make ARGS="version" run-cli && make MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.LATEST_DATA_SOURCE }}" ARGS="version" run-cli'
-          ${{ matrix.dbparams.POST_RUN }}
-          echo "Generating dump"
-          docker-compose --no-ansi exec -T ${{ matrix.dbparams.MIGRATED_DUMP_CMD }}
-          docker-compose --no-ansi exec -T ${{ matrix.dbparams.LATEST_DUMP_CMD }}
-          echo "Removing databases created for db comparison"
-          docker-compose --no-ansi exec -T ${{ matrix.dbparams.REMOVE_CMD }}
-          echo "Generating diff"
-          diff migrated.sql latest.sql > diff.txt && echo "Both schemas are same" || (echo "Schema mismatch" && cat diff.txt && exit 1)
-        working-directory: ./mattermost-server
-        timeout-minutes: 60
+  #     - name: Test Schema - (${{ matrix.dbparams.DRIVER_NAME }})
+  #       run: |
+  #         ulimit -n 8096
+  #         mkdir -p client/plugins
+  #         cd build
+  #         echo "Creating databases"
+  #         docker-compose --no-ansi exec -T ${{ matrix.dbparams.CREATE_CMD }}
+  #         echo "Importing ${{ matrix.dbparams.DRIVER_NAME }} dump from version 5.0"
+  #         docker-compose --no-ansi exec -T ${{ matrix.dbparams.DB_IMPORT_CMD }}
+  #         docker run -i --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
+  #           --env CI_INBUCKET_HOST=inbucket \
+  #           --env CI_MINIO_HOST=minio \
+  #           --env CI_INBUCKET_PORT=10080 \
+  #           --env CI_MINIO_PORT=9000 \
+  #           --env CI_INBUCKET_SMTP_PORT=10025 \
+  #           --env CI_LDAP_HOST=openldap \
+  #           --env IS_CI="true" \
+  #           --env MM_EMAILSETTINGS_SMTPSERVER=inbucket \
+  #           --env MM_EMAILSETTINGS_SMTPPORT=10025 \
+  #           --env MM_ELASTICSEARCHSETTINGS_CONNECTIONURL=http://elasticsearch:9200 \
+  #           --env MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.MIGRATED_DATA_SOURCE }}" \
+  #           --env MM_SQLSETTINGS_DRIVERNAME=${{ matrix.dbparams.DRIVER_NAME }} \
+  #           --env GOBIN=/mattermost/mattermost-server/bin \
+  #           -v ${{ env.WORKING_ROOT_DIRECTORY }}:/mattermost \
+  #           -w /mattermost/mattermost-server \
+  #           mattermost/mattermost-build-server:20200731_golang-1.14.6 \
+  #           bash -c 'ulimit -n 8096; make ARGS="version" run-cli && make MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.LATEST_DATA_SOURCE }}" ARGS="version" run-cli'
+  #         ${{ matrix.dbparams.POST_RUN }}
+  #         echo "Generating dump"
+  #         docker-compose --no-ansi exec -T ${{ matrix.dbparams.MIGRATED_DUMP_CMD }}
+  #         docker-compose --no-ansi exec -T ${{ matrix.dbparams.LATEST_DUMP_CMD }}
+  #         echo "Removing databases created for db comparison"
+  #         docker-compose --no-ansi exec -T ${{ matrix.dbparams.REMOVE_CMD }}
+  #         echo "Generating diff"
+  #         diff migrated.sql latest.sql > diff.txt && echo "Both schemas are same" || (echo "Schema mismatch" && cat diff.txt && exit 1)
+  #       working-directory: ./mattermost-server
+  #       timeout-minutes: 60
       
-      - name: Stop Docker
-        run: |
-          docker-compose down -v
-          docker-compose rm -v
-        if: always()
-        working-directory: ./mattermost-server
+  #     - name: Stop Docker
+  #       run: |
+  #         docker-compose down -v
+  #         docker-compose rm -v
+  #       if: always()
+  #       working-directory: ./mattermost-server
 
   # check-webapp-type:
   #   name: Check Webapp Type
