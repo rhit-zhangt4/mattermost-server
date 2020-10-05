@@ -247,7 +247,7 @@ jobs:
             MIGRATED_DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/migrated?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
             LATEST_DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/latest?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
             CREATE_CMD: mysql mysql -uroot -pmostest -e "CREATE DATABASE migrated; CREATE DATABASE latest; GRANT ALL PRIVILEGES ON migrated.* TO mmuser; GRANT ALL PRIVILEGES ON latest.* TO mmuser",
-            IMPORT_CMD: "mysql mysql -D migrated -uroot -pmostest",
+            DB_IMPORT_CMD: mysql mysql -D migrated -uroot -pmostest,
             POST_RUN: echo "Ignoring known MySQL mismatch: ChannelMembers.SchemeGuest" && docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;" && docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;",
             MIGRATED_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest migrated > migrated.sql,
             LATEST_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest latest > latest.sql,
@@ -258,7 +258,7 @@ jobs:
             MIGRATED_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/migrated?sslmode=disable&connect_timeout=10",
             LATEST_DATE_SOURCE: "postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10",
             CREATE_CMD: postgres sh -c 'exec echo "CREATE DATABASE migrated; CREATE DATABASE latest;" | exec psql -U mmuser mattermost_test',
-            IMPORT_CMD: postgres psql -U mmuser -d migrated,
+            DB_IMPORT_CMD: postgres psql -U mmuser -d migrated,
             POST_RUN: echo "There is no known Postgres mismatch",
             MIGRATED_DUMP_CMD: postgres pg_dump --schema-only -d migrated -U mmuser > migrated.sql,
             LATEST_DUMP_CMD: postgres pg_dump --schema-only -d latest -U mmuser > latest.sql,
@@ -309,7 +309,7 @@ jobs:
           echo "Creating databases"
           docker-compose --no-ansi exec -T ${{ matrix.dbparams.CREATE_CMD }}
           echo "Importing ${{ matrix.dbparams.DRIVER_NAME }} dump from version 5.0"
-          docker-compose --no-ansi exec -T ${{ matrix.dbparams.IMPORT_CMD }} < ../scripts/mattermost-${{ matrix.dbparams.DRIVER_NAME }}-5.0.sql
+          docker-compose --no-ansi exec -T ${{ matrix.dbparams.DB_IMPORT_CMD }} < ../scripts/mattermost-${{ matrix.dbparams.DRIVER_NAME }}-5.0.sql
           docker run -i --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
             --env CI_INBUCKET_HOST=inbucket \
             --env CI_MINIO_HOST=minio \
