@@ -36,6 +36,8 @@ jobs:
         run: docker version
       - name: Verify docker-compose Installment
         run: docker-compose version
+      - name: Verify zip Installment
+        run: zip
       - name: Clean Environment # Ensure docker generated files are properly cleaned
         run: rm -rf *
 
@@ -484,66 +486,67 @@ jobs:
   #       run: npm run check-types
   #       working-directory: ./mattermost-webapp
 
-  test-webapp:
-    name: Test Webapp
-    runs-on: self-hosted
-    needs: [check-env] #[ check-webapp-style , check-i18n , check-webapp-type ]
-    steps:
-      - name: Export Webapp Repository Name
-        run: | 
-          echo "Server Repository: $GITHUB_REPOSITORY"
-          echo "CC_WEBAPP_REPOSITORY=${GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp" >> $GITHUB_ENV
+  # test-webapp:
+  #   name: Test Webapp
+  #   runs-on: self-hosted
+  #   needs: [check-env] #[ check-webapp-style , check-i18n , check-webapp-type ]
+  #   steps:
+  #     - name: Export Webapp Repository Name
+  #       run: | 
+  #         echo "Server Repository: $GITHUB_REPOSITORY"
+  #         echo "CC_WEBAPP_REPOSITORY=${GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp" >> $GITHUB_ENV
 
-      - name: Checkout Webapp Repository
-        uses: actions/checkout@v2
-        with:
-          repository: ${{ env.CC_WEBAPP_REPOSITORY }}
-          path: ./mattermost-webapp
+  #     - name: Checkout Webapp Repository
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: ${{ env.CC_WEBAPP_REPOSITORY }}
+  #         path: ./mattermost-webapp
 
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+  #     - name: Cache node modules
+  #       uses: actions/cache@v2
+  #       env:
+  #         cache-name: cache-node-modules
+  #       with:
+  #         # npm cache files are stored in `~/.npm` on Linux/macOS
+  #         path: ~/.npm
+  #         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-build-${{ env.cache-name }}-
+  #           ${{ runner.os }}-build-
+  #           ${{ runner.os }}-
 
-      - name: Install Dependency
-        run: npm ci
-        working-directory: ./mattermost-webapp
+  #     - name: Install Dependency
+  #       run: npm ci
+  #       working-directory: ./mattermost-webapp
 
-      - name: Test
-        run: npm run test-ci 
-        working-directory: ./mattermost-webapp
+  #     - name: Test
+  #       run: npm run test-ci 
+  #       working-directory: ./mattermost-webapp
 
-      - name: Check Xml Test Report
-        id: find_test_report
-        run: test -f build/test-results.xml
-        if: always()
-        working-directory: ./mattermost-webapp
+  #     - name: Check Xml Test Report
+  #       id: find_test_report
+  #       run: test -f build/test-results.xml
+  #       if: always()
+  #       working-directory: ./mattermost-webapp
 
-      - name: Generate HTML Report
-        run: xunit-viewer -r build/test-results.xml -o build/test-results.html
-        if: steps.find_test_report.outcome == 'success'
-        working-directory: ./mattermost-webapp
+  #     - name: Generate HTML Report
+  #       run: xunit-viewer -r build/test-results.xml -o build/test-results.html
+  #       if: steps.find_test_report.outcome == 'success'
+  #       working-directory: ./mattermost-webapp
 
-      - name: Upload Test Report
-        uses: actions/upload-artifact@v2
-        if: steps.find_test_report.outcome == 'success'
-        with:
-          name: webapp-test-results-${{ github.run_id }}
-          path: |
-            mattermost-webapp/build/test-results.xml
-            mattermost-webapp/build/test-results.html
+  #     - name: Upload Test Report
+  #       uses: actions/upload-artifact@v2
+  #       if: steps.find_test_report.outcome == 'success'
+  #       with:
+  #         name: webapp-test-results-${{ github.run_id }}
+  #         path: |
+  #           mattermost-webapp/build/test-results.xml
+  #           mattermost-webapp/build/test-results.html
+
   build:
     name: Build and Package
     runs-on: self-hosted
-    needs: [ test-webapp ]
+    needs: [check-env] #[ test-webapp ]
     steps:
       - name: Export Webapp Repository Name
         run: | 
@@ -593,7 +596,7 @@ jobs:
         run: npm run build 
         working-directory: ./mattermost-webapp
 
-      - name: Setting up Enterprise Environment
+      - name: Setup Enterprise Environment
         run: |
           rm -rf enterprise
           mkdir -p enterprise/imports
