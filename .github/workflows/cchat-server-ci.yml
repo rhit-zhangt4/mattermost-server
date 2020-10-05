@@ -229,6 +229,16 @@ jobs:
             mattermost-server/build/logs/docker_ps
             mattermost-server/build/logs/docker_stats
 
+      - name: Clean up Docker generated files # Docker generated files are owned by root
+        run: |
+          docker run -i --net $COMPOSE_PROJECT_NAME_mm-test \
+            -v $WORK_ROOT_PATH:/mattermost \
+            -w /mattermost/mattermost-server \
+            mattermost/mattermost-build-server:20200731_golang-1.14.6 \
+            bash -c 'rm -rf services/mailservice/data'
+        if: always()
+        working-directory: ./mattermost-server
+
       - name: Stop Docker
         run: |
           docker-compose down -v
