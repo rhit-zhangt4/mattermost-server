@@ -13,7 +13,7 @@ env:
 jobs:
   check-env:
     name: Check Environment
-    runs-on: cc-runner
+    runs-on: self-hosted
     steps:
       - name: Add Go Path # Do this before all go commands
         run: | 
@@ -104,7 +104,7 @@ jobs:
 
   test-server: # Run go tests 
     name: Test Server
-    runs-on: cc-runner
+    runs-on: self-hosted
     needs: [test-schema] #[ check-server-style , check-app-layers , check-store-layers ]
     strategy: # Server tests need to run in 2 environments
       fail-fast: false # Always run both tests even when 1 fails
@@ -236,7 +236,7 @@ jobs:
 
   test-schema:
     name: Test Schema Migration
-    runs-on: cc-runner
+    runs-on: self-hosted
     needs: [ check-env ] #[ check-server-style , check-app-layers , check-store-layers ]
     strategy: # Server tests need to run in 2 environments
       fail-fast: false # Always run both tests even when 1 fails
@@ -248,7 +248,7 @@ jobs:
             LATEST_DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/latest?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
             CREATE_CMD: mysql mysql -uroot -pmostest -e "CREATE DATABASE migrated; CREATE DATABASE latest; GRANT ALL PRIVILEGES ON migrated.* TO mmuser; GRANT ALL PRIVILEGES ON latest.* TO mmuser",
             DB_IMPORT_CMD: mysql mysql -D migrated -uroot -pmostest,
-            POST_RUN: echo "Ignoring known MySQL mismatch: ChannelMembers.SchemeGuest" && docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;" && docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;",
+            POST_RUN: echo "Ignoring known MySQL mismatch:ChannelMembers.SchemeGuest" && docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;" && docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;",
             MIGRATED_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest migrated > migrated.sql,
             LATEST_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest latest > latest.sql,
             REMOVE_CMD: mysql mysql -uroot -pmostest -e 'DROP DATABASE migrated; DROP DATABASE latest',
@@ -423,7 +423,7 @@ jobs:
   #           mattermost-webapp/build/test-results.html
   finish-test-server:
     name: Test Finish
-    runs-on: cc-runner
+    runs-on: self-hosted
     needs: [test-server]
     steps:
       - name: Test
