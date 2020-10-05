@@ -154,14 +154,14 @@ jobs:
       - name: Wait for docker-compose
         run: |
           sleep 5
-          docker run --net $COMPOSE_PROJECT_NAME_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
-          docker run --net $COMPOSE_PROJECT_NAME_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
+          docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
+          docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
 
       - name: Test Server - (${{ matrix.dbparams.DRIVER_NAME }})
         run: |
           ulimit -n 8096
           mkdir -p client/plugins
-          docker run -i --net $COMPOSE_PROJECT_NAME_mm-test \
+          docker run -i --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
             --env TEST_DATABASE_MYSQL_DSN="mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s" \
             --env TEST_DATABASE_POSTGRESQL_DSN="postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10" \
             --env TEST_DATABASE_MYSQL_ROOT_PASSWD=mostest \
@@ -178,7 +178,7 @@ jobs:
             --env MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.DATA_SOURCE }}" \
             --env MM_SQLSETTINGS_DRIVERNAME=${{ matrix.dbparams.DRIVER_NAME }} \
             --env GOBIN=/mattermost/mattermost-server/bin \
-            -v $WORK_ROOT_PATH:/mattermost \
+            -v ${{ env.WORK_ROOT_PATH }}:/mattermost \
             -w /mattermost/mattermost-server \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="$BUILD_NUMBER" TESTFLAGS= TESTFLAGSEE='
@@ -231,8 +231,8 @@ jobs:
 
       - name: Clean up Docker generated files # Docker generated files are owned by root
         run: |
-          docker run -i --net $COMPOSE_PROJECT_NAME_mm-test \
-            -v $WORK_ROOT_PATH:/mattermost \
+          docker run -i --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
+            -v ${{ env.WORK_ROOT_PATH }}:/mattermost \
             -w /mattermost/mattermost-server \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'rm -rf services/mailservice/data'
@@ -310,8 +310,8 @@ jobs:
       - name: Wait for docker-compose
         run: |
           sleep 5
-          docker run --net $COMPOSE_PROJECT_NAME_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
-          docker run --net $COMPOSE_PROJECT_NAME_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
+          docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
+          docker run --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
 
       - name: Test Schema - (${{ matrix.dbparams.DRIVER_NAME }})
         run: |
@@ -322,7 +322,7 @@ jobs:
           docker-compose --no-ansi exec -T ${{ matrix.dbparams.CREATE_CMD }}
           echo "Importing ${{ matrix.dbparams.DRIVER_NAME }} dump from version 5.0"
           docker-compose --no-ansi exec -T ${{ matrix.dbparams.DB_IMPORT_CMD }}
-          docker run -i --net $COMPOSE_PROJECT_NAME_mm-test \
+          docker run -i --net ${{ env.COMPOSE_PROJECT_NAME }}_mm-test \
             --env CI_INBUCKET_HOST=inbucket \
             --env CI_MINIO_HOST=minio \
             --env CI_INBUCKET_PORT=10080 \
@@ -336,7 +336,7 @@ jobs:
             --env MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.MIGRATED_DATA_SOURCE }}" \
             --env MM_SQLSETTINGS_DRIVERNAME=${{ matrix.dbparams.DRIVER_NAME }} \
             --env GOBIN=/mattermost/mattermost-server/bin \
-            -v $WORK_ROOT_PATH:/mattermost \
+            -v ${{ env.WORK_ROOT_PATH }}:/mattermost \
             -w /mattermost/mattermost-server \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; make ARGS="version" run-cli && make MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.LATEST_DATA_SOURCE }}" ARGS="version" run-cli'
