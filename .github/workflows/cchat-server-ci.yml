@@ -178,6 +178,7 @@ jobs:
             --env GOBIN=/mattermost/mattermost-server/bin \
             -v ${{ env.WORKING_ROOT_DIRECTORY }}:/mattermost \
             -w /mattermost/mattermost-server \
+            -u "$(id -u):$(id -g)" \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="${{ env.BUILD_NUMBER }}" TESTFLAGS= TESTFLAGSEE='
         working-directory: ./mattermost-server
@@ -326,6 +327,7 @@ jobs:
             --env GOBIN=/mattermost/mattermost-server/bin \
             -v ${{ env.WORKING_ROOT_DIRECTORY }}:/mattermost \
             -w /mattermost/mattermost-server \
+            -u "$(id -u):$(id -g)" \
             mattermost/mattermost-build-server:20200731_golang-1.14.6 \
             bash -c 'ulimit -n 8096; make ARGS="version" run-cli && make MM_SQLSETTINGS_DATASOURCE="${{ matrix.dbparams.LATEST_DATA_SOURCE }}" ARGS="version" run-cli'
           ${{ matrix.dbparams.POST_RUN }}
