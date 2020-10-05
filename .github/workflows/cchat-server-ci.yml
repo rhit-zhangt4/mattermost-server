@@ -288,8 +288,8 @@ jobs:
     steps:
       - name: Export Environment Variables
         run: |
-          echo "BUILD_NUMBER=$CC_BUILD_PREFIX$$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
-          echo "WORK_ROOT_PATH=$(pwd)"  >> $GITHUB_PATH
+          echo "BUILD_NUMBER=$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
+          echo "WORK_ROOT_PATH=$(pwd)"  >> $GITHUB_ENV
 
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -549,7 +549,7 @@ jobs:
           echo "CC_WEBAPP_REPOSITORY=${GITHUB_REPOSITORY%%/mattermost-server}/mattermost-webapp" >> $GITHUB_ENV
 
       - name: Export Build Number
-        run: echo "BUILD_NUMBER=$CC_BUILD_PREFIX$$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
+        run: echo "BUILD_NUMBER=$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
 
       - name: Checkout Webapp Repository
         uses: actions/checkout@v2
