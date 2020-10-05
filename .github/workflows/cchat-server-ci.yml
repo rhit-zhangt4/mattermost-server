@@ -129,6 +129,12 @@ jobs:
         with:
           path: ./mattermost-server
 
+      - name: Setup Enterprise Environment
+        run: |
+          rm -rf enterprise
+          mkdir -p enterprise/imports
+          cp -T mattermost-server/imports/placeholder.go enterprise/imports/imports.go
+      
       - name: Add Go Path 
         run: | 
           echo ::set-env name=GOPATH::$HOME/go
@@ -196,11 +202,11 @@ jobs:
       - name: Generate Html Report
         run: |
           xunit-viewer -r report.xml -o report.html
-        if: steps.find_test_report.outcome == 'success'
+        if: always() && steps.find_test_report.outcome == 'success'
         working-directory: ./mattermost-server
 
       - name: Upload Test Logs and Reports - (${{ matrix.dbparams.DRIVER_NAME }})
-        if: steps.find_test_report.outcome == 'success'
+        if: always() && steps.find_test_report.outcome == 'success'
         uses: actions/upload-artifact@v2
         with:
           name: test-artifacts-${{ matrix.dbparams.DRIVER_NAME }}
@@ -212,7 +218,7 @@ jobs:
             mattermost-server/report.html
 
       - name: Upload Test Logs Only - (${{ matrix.dbparams.DRIVER_NAME }})
-        if: steps.find_test_report.outcome != 'success'
+        if: always() && steps.find_test_report.outcome != 'success'
         uses: actions/upload-artifact@v2
         with:
           name: test-artifacts-${{ matrix.dbparams.DRIVER_NAME }}
@@ -223,8 +229,8 @@ jobs:
 
       - name: Stop Docker
         run: |
-          docker stop $(docker ps -aq)
-          docker rm $(docker ps -aq)
+          docker-compose down -v
+	        docker-compose rm -v
           docker network rm ${{ env.COMPOSE_PROJECT_NAME }}_mm-test
         if: always()
 
