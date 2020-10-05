@@ -20,9 +20,9 @@ jobs:
           echo ::set-env name=GOPATH::$HOME/go
           echo ::add-path::$HOME/go/bin
           echo ::add-path::/usr/local/go/bin
-      - name: Verify Go Installment
+      - name: Verify go Installment
         run: go version
-      - name: Verify Make Installment
+      - name: Verify make Installment
         run: make -version
       - name: Verify golangci-lint Installment
         run: golangci-lint version
@@ -32,7 +32,7 @@ jobs:
         run: npm -v
       - name: Verify xunit-viewer Installment
         run: xunit-viewer --version
-      - name: Verify Docker Installment
+      - name: Verify docker Installment
         run: docker version
       - name: Verify docker-compose Installment
         run: docker-compose version
@@ -107,6 +107,7 @@ jobs:
     runs-on: cc-runner
     needs: [check-env] #[ check-server-style , check-app-layers , check-store-layers ]
     strategy: # Server tests need to run in 2 environments
+      fail-fast: false # Always run both tests even when 1 fails
       matrix:
         dbparams:
           - {
@@ -118,7 +119,6 @@ jobs:
             DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10"
           }
     steps:
-
       - name: Export Environment Variables
         run: |
           echo ::set-env name=BUILD_NUMBER::$CC_BUILD_PREFIX$GITHUB_RUN_NUMBER
@@ -233,6 +233,7 @@ jobs:
           docker-compose rm -v
           docker network rm ${{ env.COMPOSE_PROJECT_NAME }}_mm-test
         if: always()
+        working-directory: ./mattermost-server
 
 
       
@@ -311,7 +312,13 @@ jobs:
   #         path: |
   #           mattermost-webapp/build/test-results.xml
   #           mattermost-webapp/build/test-results.html
-
+  finish-test-server:
+    name: Test Finish
+    runs-on: cc-runner
+    needs: [test-server]
+    steps:
+      - name: Test
+        run: echo "Done"
   # build:
   #   name: Build and Package
   #   runs-on: cc-runner
