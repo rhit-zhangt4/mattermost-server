@@ -230,7 +230,7 @@ jobs:
       - name: Stop Docker
         run: |
           docker-compose down -v
-	        docker-compose rm -v
+          docker-compose rm -v
           docker network rm ${{ env.COMPOSE_PROJECT_NAME }}_mm-test
         if: always()
 
