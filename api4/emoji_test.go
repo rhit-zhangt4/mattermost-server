@@ -17,6 +17,39 @@ import (
 	"github.com/mattermost/mattermost-server/v5/utils"
 )
 
+func TestMyCreateEmoji(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+	Client := th.Client
+
+	EnableCustomEmoji := *th.App.Config().ServiceSettings.EnableCustomEmoji
+	defer func() {
+		th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = EnableCustomEmoji })
+	}()
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = false })
+
+	defaultRolePermissions := th.SaveDefaultRolePermissions()
+	defer func() {
+		th.RestoreDefaultRolePermissions(defaultRolePermissions)
+	}()
+
+	emoji := &model.Emoji{
+		CreatorId: th.BasicUser.Id,
+		Name:      model.NewId(),
+	}
+
+	// try to create an emoji when they're disabled
+	_, resp := Client.CreatePrivateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+	CheckNotImplementedStatus(t, resp)
+
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
+
+	newEmoji, resp := Client.CreatePrivateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+	CheckNoError(t, resp)
+	require.Equal(t, newEmoji.Name, emoji.Name, "create with wrong name")
+
+}
+
 func TestCreateEmoji(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
@@ -225,6 +258,75 @@ func TestGetEmojiList(t *testing.T) {
 	require.Falsef(t, found, "should not get a deleted emoji %v", emojis[0].Id)
 
 	listEmoji, resp = Client.GetEmojiList(0, 1)
+	CheckNoError(t, resp)
+
+	require.Len(t, listEmoji, 1, "should only return 1")
+
+	listEmoji, resp = Client.GetSortedEmojiList(0, 100, model.EMOJI_SORT_BY_NAME)
+	CheckNoError(t, resp)
+
+	require.Greater(t, len(listEmoji), 0, "should return more than 0")
+}
+
+func TestGetPrivateEmojiList(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+	Client := th.Client
+
+	EnableCustomEmoji := *th.App.Config().ServiceSettings.EnableCustomEmoji
+	defer func() {
+		th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = EnableCustomEmoji })
+	}()
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
+
+	emojis := []*model.Emoji{
+		{
+			CreatorId: th.BasicUser.Id,
+			Name:      model.NewId(),
+		},
+		{
+			CreatorId: th.BasicUser.Id,
+			Name:      model.NewId(),
+		},
+		{
+			CreatorId: th.BasicUser.Id,
+			Name:      model.NewId(),
+		},
+	}
+
+	for idx, emoji := range emojis {
+		newEmoji, resp := Client.CreateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+		CheckNoError(t, resp)
+		emojis[idx] = newEmoji
+	}
+
+	listEmoji, resp := Client.GetPrivateEmojiList(0, 100)
+	CheckNoError(t, resp)
+	for _, emoji := range emojis {
+		found := false
+		for _, savedEmoji := range listEmoji {
+			if emoji.Id == savedEmoji.Id {
+				found = true
+				break
+			}
+		}
+		require.Truef(t, found, "failed to get emoji with id %v, %v", emoji.Id, len(listEmoji))
+	}
+
+	_, resp = Client.DeleteEmoji(emojis[0].Id)
+	CheckNoError(t, resp)
+	listEmoji, resp = Client.GetPrivateEmojiList(0, 100)
+	CheckNoError(t, resp)
+	found := false
+	for _, savedEmoji := range listEmoji {
+		if savedEmoji.Id == emojis[0].Id {
+			found = true
+			break
+		}
+	}
+	require.Falsef(t, found, "should not get a deleted emoji %v", emojis[0].Id)
+
+	listEmoji, resp = Client.GetPrivateEmojiList(0, 1)
 	CheckNoError(t, resp)
 
 	require.Len(t, listEmoji, 1, "should only return 1")
