@@ -24,6 +24,7 @@ func genStore() *mocks.Store {
 	mock.On("CommandWebhook").Return(&mocks.CommandWebhookStore{})
 	mock.On("Compliance").Return(&mocks.ComplianceStore{})
 	mock.On("Emoji").Return(&mocks.EmojiStore{})
+	mock.On("EmojiAccess").Return(&mocks.EmojiAccessStore{})
 	mock.On("FileInfo").Return(&mocks.FileInfoStore{})
 	mock.On("Group").Return(&mocks.GroupStore{})
 	mock.On("Job").Return(&mocks.JobStore{})
