@@ -57,7 +57,7 @@ func (es SqlEmojiAccessStore) GetByUserIdAndEmojiId(userId string, emojiId strin
 		`SELECT
 			*
 		FROM
-			Emoji
+			EmojiAccess
 		WHERE
 			UserId = :Key1
 			AND EmojiId = :Key2`, map[string]string{"Key1": userId, "Key2": emojiId})

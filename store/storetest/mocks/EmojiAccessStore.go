@@ -81,3 +81,4 @@ func (_m *EmojiAccessStore) Save(emoji_access *model.EmojiAccess) (*model.EmojiA
 	}
 
 	return r0, r1
+}

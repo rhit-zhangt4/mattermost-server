@@ -349,15 +349,15 @@ func getPrivateEmojiImage(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	image, imageType, err := c.App.GetPrivateEmojiImage(c.Params.EmojiId, userid)
-	if err != nil {
-		c.Err = err
-		return
-	}
+	// image, imageType, err := c.App.GetPrivateEmojiImage(c.Params.EmojiId, userid)
+	// if err != nil {
+	// 	c.Err = err
+	// 	return
+	// }
 
-	w.Header().Set("Content-Type", "image/"+imageType)
-	w.Header().Set("Cache-Control", "max-age=2592000, public")
-	w.Write(image)
+	// w.Header().Set("Content-Type", "image/"+imageType)
+	// w.Header().Set("Cache-Control", "max-age=2592000, public")
+	// w.Write(image)
 }
 
 func searchEmojis(c *Context, w http.ResponseWriter, r *http.Request) {

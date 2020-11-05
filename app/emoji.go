@@ -123,7 +123,14 @@ func (a *App) CreatePrivateEmoji(sessionUserId string, emoji *model.Emoji, multi
 	if err != nil {
 		return nil, model.NewAppError("CreateEmoji", "app.emoji.create.internal_error", nil, err.Error(), http.StatusInternalServerError)
 	}
-
+	emoji_access := &model.EmojiAccess{
+		EmojiId: emoji.Id,
+		UserId:  sessionUserId,
+	}
+	emoji_access, err = a.Srv().Store.EmojiAccess().Save(emoji_access)
+	if err != nil {
+		return nil, model.NewAppError("CreateEmoji", "app.emojiAceess.create.internal_error", nil, err.Error(), http.StatusInternalServerError)
+	}
 	message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_EMOJI_ADDED, "", "", "", nil)
 	message.Add("emoji", emoji.ToJson())
 	a.Publish(message)
@@ -141,12 +148,23 @@ func (a *App) GetEmojiList(page, perPage int, sort string) ([]*model.Emoji, *mod
 
 func (a *App) GetPrivateEmojiList(page, perPage int, sort string, userid string) ([]*model.Emoji, *model.AppError) {
 	// TODO: change query with userid
-	list, err := a.Srv().Store.Emoji().GetList(page*perPage, perPage, sort)
+	//list, err := a.Srv().Store.Emoji().GetList(page*perPage, perPage, sort)
+	list, err := a.Srv().Store.EmojiAccess().GetMultipleByUserId([]string{userid})
 	if err != nil {
 		return nil, model.NewAppError("GetEmojiList", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
 	}
+	var emojis []*model.Emoji
+	for _, v := range list {
+		emoji, err := a.Srv().Store.Emoji().Get(v.EmojiId, true)
+		if err != nil {
+			return nil, model.NewAppError("GetEmojiPrivateList", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
+		}
+		if err == nil {
+			emojis = append(emojis, emoji)
+		}
+	}
 
-	return list, nil
+	return emojis, nil
 }
 
 func (a *App) UploadEmojiImage(id string, imageData *multipart.FileHeader) *model.AppError {
@@ -322,30 +340,30 @@ func (a *App) GetEmojiImage(emojiId string) ([]byte, string, *model.AppError) {
 	return img, imageType, nil
 }
 
-func (a *App) GetPrivateEmojiImage(emojiId string, userid string) ([]byte, string, *model.AppError) {
-	_, storeErr := a.Srv().Store.Emoji().Get(emojiId, true)
-	if storeErr != nil {
-		var nfErr *store.ErrNotFound
-		switch {
-		case errors.As(storeErr, &nfErr):
-			return nil, "", model.NewAppError("GetEmojiImage", "app.emoji.get.no_result", nil, storeErr.Error(), http.StatusNotFound)
-		default:
-			return nil, "", model.NewAppError("GetEmojiImage", "app.emoji.get.app_error", nil, storeErr.Error(), http.StatusInternalServerError)
-		}
-	}
+// func (a *App) GetPrivateEmojiImage(emojiId string, userid string) ([]byte, string, *model.AppError) {
+// 	_, storeErr := a.Srv().Store.Emoji().Get(emojiId, true)
+// 	if storeErr != nil {
+// 		var nfErr *store.ErrNotFound
+// 		switch {
+// 		case errors.As(storeErr, &nfErr):
+// 			return nil, "", model.NewAppError("GetEmojiImage", "app.emoji.get.no_result", nil, storeErr.Error(), http.StatusNotFound)
+// 		default:
+// 			return nil, "", model.NewAppError("GetEmojiImage", "app.emoji.get.app_error", nil, storeErr.Error(), http.StatusInternalServerError)
+// 		}
+// 	}
 
-	img, appErr := a.ReadFile(getEmojiImagePath(emojiId))
-	if appErr != nil {
-		return nil, "", model.NewAppError("getEmojiImage", "api.emoji.get_image.read.app_error", nil, appErr.Error(), http.StatusNotFound)
-	}
+// 	img, appErr := a.ReadFile(getEmojiImagePath(emojiId))
+// 	if appErr != nil {
+// 		return nil, "", model.NewAppError("getEmojiImage", "api.emoji.get_image.read.app_error", nil, appErr.Error(), http.StatusNotFound)
+// 	}
 
-	_, imageType, err := image.DecodeConfig(bytes.NewReader(img))
-	if err != nil {
-		return nil, "", model.NewAppError("getEmojiImage", "api.emoji.get_image.decode.app_error", nil, err.Error(), http.StatusInternalServerError)
-	}
+// 	_, imageType, err := image.DecodeConfig(bytes.NewReader(img))
+// 	if err != nil {
+// 		return nil, "", model.NewAppError("getEmojiImage", "api.emoji.get_image.decode.app_error", nil, err.Error(), http.StatusInternalServerError)
+// 	}
 
-	return img, imageType, nil
-}
+// 	return img, imageType, nil
+// }
 
 func (a *App) SearchEmoji(name string, prefixOnly bool, limit int) ([]*model.Emoji, *model.AppError) {
 	if !*a.Config().ServiceSettings.EnableCustomEmoji {
