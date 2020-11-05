@@ -4531,44 +4531,10 @@ func (c *Client4) CreateEmoji(emoji *Emoji, image []byte, filename string) (*Emo
 	return c.DoEmojiUploadFile(c.GetEmojisRoute(), body.Bytes(), writer.FormDataContentType())
 }
 
-func (c *Client4) CreatePrivateEmoji(emoji *Emoji, image []byte, filename string) (*Emoji, *Response) {
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	part, err := writer.CreateFormFile("image", filename)
-	if err != nil {
-		return nil, &Response{StatusCode: http.StatusForbidden, Error: NewAppError("CreateEmoji", "model.client.create_emoji.image.app_error", nil, err.Error(), 0)}
-	}
-
-	if _, err := io.Copy(part, bytes.NewBuffer(image)); err != nil {
-		return nil, &Response{StatusCode: http.StatusForbidden, Error: NewAppError("CreateEmoji", "model.client.create_emoji.image.app_error", nil, err.Error(), 0)}
-	}
-
-	if err := writer.WriteField("emoji", emoji.ToJson()); err != nil {
-		return nil, &Response{StatusCode: http.StatusForbidden, Error: NewAppError("CreateEmoji", "model.client.create_emoji.emoji.app_error", nil, err.Error(), 0)}
-	}
-
-	if err := writer.Close(); err != nil {
-		return nil, &Response{StatusCode: http.StatusForbidden, Error: NewAppError("CreateEmoji", "model.client.create_emoji.writer.app_error", nil, err.Error(), 0)}
-	}
-
-	return c.DoEmojiUploadFile(c.GetEmojisRoute()+"/private", body.Bytes(), writer.FormDataContentType())
-}
-
 // GetEmojiList returns a page of custom emoji on the system.
 func (c *Client4) GetEmojiList(page, perPage int) ([]*Emoji, *Response) {
 	query := fmt.Sprintf("?page=%v&per_page=%v", page, perPage)
 	r, err := c.DoApiGet(c.GetEmojisRoute()+query, "")
-	if err != nil {
-		return nil, BuildErrorResponse(r, err)
-	}
-	defer closeBody(r)
-	return EmojiListFromJson(r.Body), BuildResponse(r)
-}
-
-func (c *Client4) GetPrivateEmojiList(page, perPage int) ([]*Emoji, *Response) {
-	query := fmt.Sprintf("?page=%v&per_page=%v", page, perPage)
-	r, err := c.DoApiGet(c.GetEmojisRoute()+"/private"+query, "")
 	if err != nil {
 		return nil, BuildErrorResponse(r, err)
 	}
@@ -4581,16 +4547,6 @@ func (c *Client4) GetPrivateEmojiList(page, perPage int) ([]*Emoji, *Response) {
 func (c *Client4) GetSortedEmojiList(page, perPage int, sort string) ([]*Emoji, *Response) {
 	query := fmt.Sprintf("?page=%v&per_page=%v&sort=%v", page, perPage, sort)
 	r, err := c.DoApiGet(c.GetEmojisRoute()+query, "")
-	if err != nil {
-		return nil, BuildErrorResponse(r, err)
-	}
-	defer closeBody(r)
-	return EmojiListFromJson(r.Body), BuildResponse(r)
-}
-
-func (c *Client4) GetSortedPrivateEmojiList(page, perPage int, sort string) ([]*Emoji, *Response) {
-	query := fmt.Sprintf("?page=%v&per_page=%v&sort=%v", page, perPage, sort)
-	r, err := c.DoApiGet(c.GetEmojisRoute()+"/private"+query, "")
 	if err != nil {
 		return nil, BuildErrorResponse(r, err)
 	}
@@ -4631,23 +4587,6 @@ func (c *Client4) GetEmojiByName(name string) (*Emoji, *Response) {
 // GetEmojiImage returns the emoji image.
 func (c *Client4) GetEmojiImage(emojiId string) ([]byte, *Response) {
 	r, apErr := c.DoApiGet(c.GetEmojiRoute(emojiId)+"/image", "")
-	if apErr != nil {
-		return nil, BuildErrorResponse(r, apErr)
-	}
-	defer closeBody(r)
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, BuildErrorResponse(r, NewAppError("GetEmojiImage", "model.client.read_file.app_error", nil, err.Error(), r.StatusCode))
-	}
-
-	return data, BuildResponse(r)
-}
-
-// GetEmojiImage returns the emoji image.
-func (c *Client4) GetPrivateEmojiImage(emojiId string, userId string) ([]byte, *Response) {
-	query := fmt.Sprintf("?userid=%v", userId)
-	r, apErr := c.DoApiGet(c.GetEmojiRoute(emojiId)+query+"/image", "")
 	if apErr != nil {
 		return nil, BuildErrorResponse(r, apErr)
 	}

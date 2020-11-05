@@ -81,66 +81,7 @@ func (a *App) CreateEmoji(sessionUserId string, emoji *model.Emoji, multiPartIma
 	return emoji, nil
 }
 
-func (a *App) CreatePrivateEmoji(sessionUserId string, emoji *model.Emoji, multiPartImageData *multipart.Form) (*model.Emoji, *model.AppError) {
-	if !*a.Config().ServiceSettings.EnableCustomEmoji {
-		return nil, model.NewAppError("UploadEmojiImage", "api.emoji.disabled.app_error", nil, "", http.StatusNotImplemented)
-	}
-
-	if len(*a.Config().FileSettings.DriverName) == 0 {
-		return nil, model.NewAppError("GetEmoji", "api.emoji.storage.app_error", nil, "", http.StatusNotImplemented)
-	}
-
-	// wipe the emoji id so that existing emojis can't get overwritten
-	emoji.Id = ""
-
-	// do our best to validate the emoji before committing anything to the DB so that we don't have to clean up
-	// orphaned files left over when validation fails later on
-	emoji.PreSave()
-	if err := emoji.IsValid(); err != nil {
-		return nil, err
-	}
-
-	if emoji.CreatorId != sessionUserId {
-		return nil, model.NewAppError("createEmoji", "api.emoji.create.other_user.app_error", nil, "", http.StatusForbidden)
-	}
-
-	if existingEmoji, err := a.Srv().Store.Emoji().GetByName(emoji.Name, true); err == nil && existingEmoji != nil {
-		return nil, model.NewAppError("createEmoji", "api.emoji.create.duplicate.app_error", nil, "", http.StatusBadRequest)
-	}
-
-	imageData := multiPartImageData.File["image"]
-	if len(imageData) == 0 {
-		err := model.NewAppError("Context", "api.context.invalid_body_param.app_error", map[string]interface{}{"Name": "createEmoji"}, "", http.StatusBadRequest)
-		return nil, err
-	}
-
-	if err := a.UploadEmojiImage(emoji.Id, imageData[0]); err != nil {
-		return nil, err
-	}
-	// TODO: set isPublic to false
-	// TODO: change query
-	emoji, err := a.Srv().Store.Emoji().Save(emoji)
-	if err != nil {
-		return nil, model.NewAppError("CreateEmoji", "app.emoji.create.internal_error", nil, err.Error(), http.StatusInternalServerError)
-	}
-
-	message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_EMOJI_ADDED, "", "", "", nil)
-	message.Add("emoji", emoji.ToJson())
-	a.Publish(message)
-	return emoji, nil
-}
-
 func (a *App) GetEmojiList(page, perPage int, sort string) ([]*model.Emoji, *model.AppError) {
-	list, err := a.Srv().Store.Emoji().GetList(page*perPage, perPage, sort)
-	if err != nil {
-		return nil, model.NewAppError("GetEmojiList", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
-	}
-
-	return list, nil
-}
-
-func (a *App) GetPrivateEmojiList(page, perPage int, sort string, userid string) ([]*model.Emoji, *model.AppError) {
-	// TODO: change query with userid
 	list, err := a.Srv().Store.Emoji().GetList(page*perPage, perPage, sort)
 	if err != nil {
 		return nil, model.NewAppError("GetEmojiList", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
@@ -298,31 +239,6 @@ func (a *App) GetMultipleEmojiByName(names []string) ([]*model.Emoji, *model.App
 }
 
 func (a *App) GetEmojiImage(emojiId string) ([]byte, string, *model.AppError) {
-	_, storeErr := a.Srv().Store.Emoji().Get(emojiId, true)
-	if storeErr != nil {
-		var nfErr *store.ErrNotFound
-		switch {
-		case errors.As(storeErr, &nfErr):
-			return nil, "", model.NewAppError("GetEmojiImage", "app.emoji.get.no_result", nil, storeErr.Error(), http.StatusNotFound)
-		default:
-			return nil, "", model.NewAppError("GetEmojiImage", "app.emoji.get.app_error", nil, storeErr.Error(), http.StatusInternalServerError)
-		}
-	}
-
-	img, appErr := a.ReadFile(getEmojiImagePath(emojiId))
-	if appErr != nil {
-		return nil, "", model.NewAppError("getEmojiImage", "api.emoji.get_image.read.app_error", nil, appErr.Error(), http.StatusNotFound)
-	}
-
-	_, imageType, err := image.DecodeConfig(bytes.NewReader(img))
-	if err != nil {
-		return nil, "", model.NewAppError("getEmojiImage", "api.emoji.get_image.decode.app_error", nil, err.Error(), http.StatusInternalServerError)
-	}
-
-	return img, imageType, nil
-}
-
-func (a *App) GetPrivateEmojiImage(emojiId string, userid string) ([]byte, string, *model.AppError) {
 	_, storeErr := a.Srv().Store.Emoji().Get(emojiId, true)
 	if storeErr != nil {
 		var nfErr *store.ErrNotFound
