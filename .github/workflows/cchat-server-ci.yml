@@ -5,6 +5,12 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      deploy_to_qa:
+        description: "Deploy to QA? (yes/no)"
+        required: true
+        default: "no"
 
 env:
   CC_BUILD_PREFIX: 'Casual Chat '
@@ -630,3 +636,33 @@ jobs:
           name: casualchat-mattermost-osx-${{ github.run_number }}
           path: |
             mattermost-server/dist/mattermost-enterprise-osx-amd64.tar.gz
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: self-hosted
+    needs: [ build ]
+    steps:
+      - name: Download Package
+        uses: actions/download-artifact@v2
+        with:
+          name: casualchat-mattermost-linux-${{ github.run_number }}
+
+      - name: Unzip Package
+        run: unzip casualchat-mattermost-linux-${{ github.run_number }}.zip
+
+      - name: Upload to Staging
+        run: scp mattermost-enterprise-linux-amd64.tar.gz csse@cchat-int-0.csse.rose-hulman.edu:/home/csse
+
+      - name: Deploy
+        run: ssh csse@cchat-int-0.csse.rose-hulman.edu $STAGING_DEPLOY_SCRIPT
+        env:
+          STAGING_DEPLOY_SCRIPT: ${{ secrets.STAGING_DEPLOY_SCRIPT }}
+
+  deploy-qa:
+    name: Deploy to QA
+    if: github.event.inputs.deploy_to_qa == 'yes'
+    runs-on: self-hosted
+    needs: [ build ]
+    steps:
+      - name: "Placeholder Action"
+        run: echo "Deploy"
