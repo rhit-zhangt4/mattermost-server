@@ -664,3 +664,12 @@ jobs:
     steps:
       - name: "Placeholder Action"
         run: echo "Deploy"
+
+  clean-docker:
+    name: Clean Docker
+    needs: [ test-server ]
+    if: always()
+    runs-on: self-hosted
+    steps:
+      - name: "Remove Stopped Containers"
+        run: docker rm -v $(docker container ls -a -q)
