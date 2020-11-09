@@ -4647,7 +4647,7 @@ func (c *Client4) GetEmojiImage(emojiId string) ([]byte, *Response) {
 // GetEmojiImage returns the emoji image.
 func (c *Client4) GetPrivateEmojiImage(emojiId string, userId string) ([]byte, *Response) {
 	query := fmt.Sprintf("?userid=%v", userId)
-	r, apErr := c.DoApiGet(c.GetEmojiRoute(emojiId)+query+"/image", "")
+	r, apErr := c.DoApiGet(c.GetEmojiRoute(emojiId)+"/privateimage"+query, "")
 	if apErr != nil {
 		return nil, BuildErrorResponse(r, apErr)
 	}
@@ -4655,7 +4655,7 @@ func (c *Client4) GetPrivateEmojiImage(emojiId string, userId string) ([]byte, *
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return nil, BuildErrorResponse(r, NewAppError("GetEmojiImage", "model.client.read_file.app_error", nil, err.Error(), r.StatusCode))
+		return nil, BuildErrorResponse(r, NewAppError("GetPrivateEmojiImage", "model.client.read_file.app_error", nil, err.Error(), r.StatusCode))
 	}
 
 	return data, BuildResponse(r)

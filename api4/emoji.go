@@ -31,7 +31,7 @@ func (api *API) InitEmoji() {
 	//TODO: add new router
 	api.BaseRoutes.Emojis.Handle("/private", api.ApiSessionRequired(createPrivateEmoji)).Methods("POST")
 	api.BaseRoutes.Emojis.Handle("/private", api.ApiSessionRequired(getPrivateEmojiList)).Methods("GET")
-	//api.BaseRoutes.Emoji.Handle("/privateimage", api.ApiSessionRequiredTrustRequester(getPrivateEmojiImage)).Methods("GET")
+	api.BaseRoutes.Emoji.Handle("/privateimage", api.ApiSessionRequiredTrustRequester(getPrivateEmojiImage)).Methods("GET")
 }
 
 func createEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -349,15 +349,22 @@ func getPrivateEmojiImage(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// image, imageType, err := c.App.GetPrivateEmojiImage(c.Params.EmojiId, userid)
-	// if err != nil {
-	// 	c.Err = err
-	// 	return
-	// }
+	userid := r.URL.Query().Get("userid")
+	if userid == "" {
+		c.SetInvalidUrlParam("userid")
+		return
+	}
+	// userid := c.App.Session().UserId
 
-	// w.Header().Set("Content-Type", "image/"+imageType)
-	// w.Header().Set("Cache-Control", "max-age=2592000, public")
-	// w.Write(image)
+	image, imageType, err := c.App.GetPrivateEmojiImage(c.Params.EmojiId, userid)
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/"+imageType)
+	w.Header().Set("Cache-Control", "max-age=2592000, public")
+	w.Write(image)
 }
 
 func searchEmojis(c *Context, w http.ResponseWriter, r *http.Request) {

@@ -559,6 +559,57 @@ func TestGetEmojiByName(t *testing.T) {
 	CheckUnauthorizedStatus(t, resp)
 }
 
+func TestMyGetEmojiImage(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+	Client := th.Client
+
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
+
+	emoji1 := &model.Emoji{
+		CreatorId: th.BasicUser.Id,
+		Name:      model.NewId(),
+	}
+
+	emoji1, resp := Client.CreatePrivateEmoji(emoji1, utils.CreateTestGif(t, 10, 10), "image.gif")
+	CheckNoError(t, resp)
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.FileSettings.DriverName = "local" })
+	//not private
+	emojiImage, resp := Client.GetEmojiImage(emoji1.Id)
+	CheckNoError(t, resp)
+	require.Greater(t, len(emojiImage), 0, "should return the image")
+
+	_, imageType, err := image.DecodeConfig(bytes.NewReader(emojiImage))
+	require.NoError(t, err)
+	require.Equal(t, imageType, "gif", "expected gif")
+
+	// private
+	emojiImage, resp = Client.GetPrivateEmojiImage(emoji1.Id, th.BasicUser.Id)
+	CheckNoError(t, resp)
+	require.Greater(t, len(emojiImage), 0, "should return the image")
+
+	_, imageType, err = image.DecodeConfig(bytes.NewReader(emojiImage))
+	require.NoError(t, err)
+	require.Equal(t, imageType, "gif", "expected gif")
+
+	emoji2 := &model.Emoji{
+		CreatorId: th.BasicUser.Id,
+		Name:      model.NewId(),
+	}
+
+	emoji2, resp = Client.CreatePrivateEmoji(emoji2, utils.CreateTestAnimatedGif(t, 10, 10, 10), "image.gif")
+	CheckNoError(t, resp)
+
+	emojiImage, resp = Client.GetPrivateEmojiImage(emoji2.Id, th.BasicUser.Id)
+	CheckNoError(t, resp)
+	require.Greater(t, len(emojiImage), 0, "no image returned")
+
+	_, imageType, err = image.DecodeConfig(bytes.NewReader(emojiImage))
+	require.NoError(t, err, "unable to indentify received image")
+	require.Equal(t, imageType, "gif", "expected gif")
+}
+
 func TestGetEmojiImage(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
