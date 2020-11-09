@@ -639,6 +639,7 @@ jobs:
 
   deploy-staging:
     name: Deploy to Staging
+    if: github.event.pull_request.merged == true
     runs-on: self-hosted
     needs: [ build ]
     steps:
@@ -646,9 +647,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: casualchat-mattermost-linux-${{ github.run_number }}
-
-      - name: Unzip Package
-        run: unzip casualchat-mattermost-linux-${{ github.run_number }}.zip
 
       - name: Upload to Staging
         run: scp mattermost-enterprise-linux-amd64.tar.gz csse@cchat-int-0.csse.rose-hulman.edu:/home/csse
@@ -666,3 +664,12 @@ jobs:
     steps:
       - name: "Placeholder Action"
         run: echo "Deploy"
+
+  clean-docker:
+    name: Clean Docker
+    needs: [ test-server ]
+    if: always()
+    runs-on: self-hosted
+    steps:
+      - name: "Remove Stopped Containers"
+        run: docker rm -v $(docker container ls -a -q)
