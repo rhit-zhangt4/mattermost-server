@@ -21,45 +21,13 @@ const (
 )
 
 func (s *Server) LoadLicense() {
-	if !s.LoadRealLicense() {
-		s.LoadFakeLicense()
-	}
-	mlog.Info("License key valid unlocking enterprise features.")
-}
-
-func (s *Server) LoadFakeLicense() {
-	fakeCustomer := &model.Customer{
-		Id:      "fakeID",
-		Name:    "fakeName",
-		Email:   "fakeEmail",
-		Company: "fakeCompany",
-	}
-	//var users int = 1
-	fakeFeatures := &model.Features{}
-	fakeFeatures.SetDefaults()
-	fakeLicense := &model.License{
-		Id:           "string",       //    `json:"id"`
-		IssuedAt:     0,              //int64     `json:"issued_at"`
-		StartsAt:     0,              //int64     `json:"starts_at"`
-		ExpiresAt:    32503716610000, //int64     `json:"expires_at"`
-		Customer:     fakeCustomer,
-		Features:     fakeFeatures, //*Features `json:"features"`
-		SkuName:      "string",     //   `json:"sku_name"`
-		SkuShortName: "string",     //    `json:"sku_short_name"`
-	}
-
-	s.SetLicense(fakeLicense)
-}
-
-func (s *Server) LoadRealLicense() bool {
 	// ENV var overrides all other sources of license.
 	licenseStr := os.Getenv(LicenseEnv)
 	if licenseStr != "" {
 		if s.ValidateAndSetLicenseBytes([]byte(licenseStr)) {
 			mlog.Info("License key from ENV is valid, unlocking enterprise features.")
-			return true
 		}
-		return false
+		return
 	}
 
 	licenseId := ""
@@ -85,11 +53,11 @@ func (s *Server) LoadRealLicense() bool {
 	if nErr != nil {
 		mlog.Info("License key from https://mattermost.com required to unlock enterprise features.")
 		s.SetLicense(nil)
-		return false
+		return
 	}
-	valid := s.ValidateAndSetLicenseBytes([]byte(record.Bytes))
+
+	s.ValidateAndSetLicenseBytes([]byte(record.Bytes))
 	mlog.Info("License key valid unlocking enterprise features.")
-	return valid
 }
 
 func (s *Server) SaveLicense(licenseBytes []byte) (*model.License, *model.AppError) {
@@ -186,11 +154,11 @@ func (s *Server) ValidateAndSetLicenseBytes(b []byte) bool {
 	if success, licenseStr := utils.ValidateLicense(b); success {
 		license := model.LicenseFromJson(strings.NewReader(licenseStr))
 		s.SetLicense(license)
-		return false
+		return true
 	}
 
 	mlog.Warn("No valid enterprise license found")
-	return true
+	return false
 }
 
 func (s *Server) SetClientLicense(m map[string]string) {
