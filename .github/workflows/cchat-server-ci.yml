@@ -647,9 +647,6 @@ jobs:
         with:
           name: casualchat-mattermost-linux-${{ github.run_number }}
 
-      - name: Unzip Package
-        run: unzip casualchat-mattermost-linux-${{ github.run_number }}.zip
-
       - name: Upload to Staging
         run: scp mattermost-enterprise-linux-amd64.tar.gz csse@cchat-int-0.csse.rose-hulman.edu:/home/csse
 
