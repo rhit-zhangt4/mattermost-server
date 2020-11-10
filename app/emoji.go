@@ -127,7 +127,7 @@ func (a *App) CreatePrivateEmoji(sessionUserId string, emoji *model.Emoji, multi
 		EmojiId: emoji.Id,
 		UserId:  sessionUserId,
 	}
-	emoji_access, err = a.Srv().Store.EmojiAccess().Save(emoji_access)
+	_, err = a.Srv().Store.EmojiAccess().Save(emoji_access)
 	if err != nil {
 		return nil, model.NewAppError("CreateEmoji", "app.emojiAceess.create.internal_error", nil, err.Error(), http.StatusInternalServerError)
 	}
@@ -159,9 +159,9 @@ func (a *App) GetPrivateEmojiList(page, perPage int, sort string, userid string)
 		if err != nil {
 			return nil, model.NewAppError("GetEmojiPrivateList", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
 		}
-		if err == nil {
-			emojis = append(emojis, emoji)
-		}
+
+		emojis = append(emojis, emoji)
+
 	}
 
 	return emojis, nil

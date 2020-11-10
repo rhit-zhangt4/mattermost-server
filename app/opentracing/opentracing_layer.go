@@ -1650,6 +1650,27 @@ func (a *OpenTracingAppLayer) CreateEmoji(sessionUserId string, emoji *model.Emo
 
 	return resultVar0, resultVar1
 }
+func (a *OpenTracingAppLayer) CreatePrivateEmoji(sessionUserId string, emoji *model.Emoji, multiPartImageData *multipart.Form) (*model.Emoji, *model.AppError) {
+	origCtx := a.ctx
+	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.CreatePrivateEmoji")
+
+	a.ctx = newCtx
+	a.app.Srv().Store.SetContext(newCtx)
+	defer func() {
+		a.app.Srv().Store.SetContext(origCtx)
+		a.ctx = origCtx
+	}()
+
+	defer span.Finish()
+	resultVar0, resultVar1 := a.app.CreatePrivateEmoji(sessionUserId, emoji, multiPartImageData)
+
+	if resultVar1 != nil {
+		span.LogFields(spanlog.Error(resultVar1))
+		ext.Error.Set(span, true)
+	}
+
+	return resultVar0, resultVar1
+}
 
 func (a *OpenTracingAppLayer) CreateGroup(group *model.Group) (*model.Group, *model.AppError) {
 	origCtx := a.ctx
@@ -1928,28 +1949,6 @@ func (a *OpenTracingAppLayer) CreatePostMissingChannel(post *model.Post, trigger
 
 	defer span.Finish()
 	resultVar0, resultVar1 := a.app.CreatePostMissingChannel(post, triggerWebhooks)
-
-	if resultVar1 != nil {
-		span.LogFields(spanlog.Error(resultVar1))
-		ext.Error.Set(span, true)
-	}
-
-	return resultVar0, resultVar1
-}
-
-func (a *OpenTracingAppLayer) CreatePrivateEmoji(sessionUserId string, emoji *model.Emoji, multiPartImageData *multipart.Form) (*model.Emoji, *model.AppError) {
-	origCtx := a.ctx
-	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.CreatePrivateEmoji")
-
-	a.ctx = newCtx
-	a.app.Srv().Store.SetContext(newCtx)
-	defer func() {
-		a.app.Srv().Store.SetContext(origCtx)
-		a.ctx = origCtx
-	}()
-
-	defer span.Finish()
-	resultVar0, resultVar1 := a.app.CreatePrivateEmoji(sessionUserId, emoji, multiPartImageData)
 
 	if resultVar1 != nil {
 		span.LogFields(spanlog.Error(resultVar1))
@@ -5067,6 +5066,28 @@ func (a *OpenTracingAppLayer) GetEmojiList(page int, perPage int, sort string) (
 	return resultVar0, resultVar1
 }
 
+func (a *OpenTracingAppLayer) GetPrivateEmojiList(page int, perPage int, sort string, userid string) ([]*model.Emoji, *model.AppError) {
+	origCtx := a.ctx
+	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.GetPrivateEmojiList")
+
+	a.ctx = newCtx
+	a.app.Srv().Store.SetContext(newCtx)
+	defer func() {
+		a.app.Srv().Store.SetContext(origCtx)
+		a.ctx = origCtx
+	}()
+
+	defer span.Finish()
+	resultVar0, resultVar1 := a.app.GetPrivateEmojiList(page, perPage, sort, userid)
+
+	if resultVar1 != nil {
+		span.LogFields(spanlog.Error(resultVar1))
+		ext.Error.Set(span, true)
+	}
+
+	return resultVar0, resultVar1
+}
+
 func (a *OpenTracingAppLayer) GetEmojiStaticUrl(emojiName string) (string, *model.AppError) {
 	origCtx := a.ctx
 	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.GetEmojiStaticUrl")
@@ -7132,28 +7153,6 @@ func (a *OpenTracingAppLayer) GetPrivateEmojiImage(emojiId string, userId string
 	}
 
 	return resultVar0, resultVar1, resultVar2
-}
-
-func (a *OpenTracingAppLayer) GetPrivateEmojiList(page int, perPage int, sort string, userid string) ([]*model.Emoji, *model.AppError) {
-	origCtx := a.ctx
-	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.GetPrivateEmojiList")
-
-	a.ctx = newCtx
-	a.app.Srv().Store.SetContext(newCtx)
-	defer func() {
-		a.app.Srv().Store.SetContext(origCtx)
-		a.ctx = origCtx
-	}()
-
-	defer span.Finish()
-	resultVar0, resultVar1 := a.app.GetPrivateEmojiList(page, perPage, sort, userid)
-
-	if resultVar1 != nil {
-		span.LogFields(spanlog.Error(resultVar1))
-		ext.Error.Set(span, true)
-	}
-
-	return resultVar0, resultVar1
 }
 
 func (a *OpenTracingAppLayer) GetProfileImage(user *model.User) ([]byte, bool, *model.AppError) {
