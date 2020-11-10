@@ -20,14 +20,38 @@ const (
 	LicenseEnv      = "MM_LICENSE"
 )
 
+var FakeLicense *model.License = &model.License{
+	Id:        "string",       //    `json:"id"`
+	IssuedAt:  0,              //int64     `json:"issued_at"`
+	StartsAt:  0,              //int64     `json:"starts_at"`
+	ExpiresAt: 32503716610000, //int64     `json:"expires_at"`
+	Customer: &model.Customer{
+		Id:      "fakeID",
+		Name:    "fakeName",
+		Email:   "fakeEmail",
+		Company: "fakeCompany",
+	},
+	Features:     &model.Features{}, //*Features `json:"features"`
+	SkuName:      "string",          //   `json:"sku_name"`
+	SkuShortName: "string",          //    `json:"sku_short_name"`
+}
+
 func (s *Server) LoadLicense() {
+	if !s.LoadRealLicense() {
+		s.SetLicense(FakeLicense)
+	}
+	mlog.Info("License key valid unlocking enterprise features.")
+}
+
+func (s *Server) LoadRealLicense() bool {
 	// ENV var overrides all other sources of license.
 	licenseStr := os.Getenv(LicenseEnv)
 	if licenseStr != "" {
 		if s.ValidateAndSetLicenseBytes([]byte(licenseStr)) {
 			mlog.Info("License key from ENV is valid, unlocking enterprise features.")
+			return true
 		}
-		return
+		return false
 	}
 
 	licenseId := ""
@@ -53,11 +77,11 @@ func (s *Server) LoadLicense() {
 	if nErr != nil {
 		mlog.Info("License key from https://mattermost.com required to unlock enterprise features.")
 		s.SetLicense(nil)
-		return
+		return false
 	}
-
-	s.ValidateAndSetLicenseBytes([]byte(record.Bytes))
+	valid := s.ValidateAndSetLicenseBytes([]byte(record.Bytes))
 	mlog.Info("License key valid unlocking enterprise features.")
+	return valid
 }
 
 func (s *Server) SaveLicense(licenseBytes []byte) (*model.License, *model.AppError) {
@@ -154,11 +178,11 @@ func (s *Server) ValidateAndSetLicenseBytes(b []byte) bool {
 	if success, licenseStr := utils.ValidateLicense(b); success {
 		license := model.LicenseFromJson(strings.NewReader(licenseStr))
 		s.SetLicense(license)
-		return true
+		return false
 	}
 
 	mlog.Warn("No valid enterprise license found")
-	return false
+	return true
 }
 
 func (s *Server) SetClientLicense(m map[string]string) {

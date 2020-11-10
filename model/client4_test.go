@@ -101,7 +101,3 @@ func TestClient4MockSession(t *testing.T) {
 	_, resp := client.GetMe("")
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
-
-func myTest() {
-
-}
