@@ -575,21 +575,21 @@ func TestMyGetEmojiImage(t *testing.T) {
 	CheckNoError(t, resp)
 	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
 	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.FileSettings.DriverName = "local" })
-	//not private
-	emojiImage, resp := Client.GetEmojiImage(emoji1.Id)
+	// //not private
+	// emojiImage, resp := Client.GetEmojiImage(emoji1.Id)
+	// CheckNoError(t, resp)
+	// require.Greater(t, len(emojiImage), 0, "should return the image")
+
+	// _, imageType, err := image.DecodeConfig(bytes.NewReader(emojiImage))
+	// require.NoError(t, err)
+	// require.Equal(t, imageType, "gif", "expected gif")
+
+	// private
+	emojiImage, resp := Client.GetPrivateEmojiImage(emoji1.Id, th.BasicUser.Id)
 	CheckNoError(t, resp)
 	require.Greater(t, len(emojiImage), 0, "should return the image")
 
 	_, imageType, err := image.DecodeConfig(bytes.NewReader(emojiImage))
-	require.NoError(t, err)
-	require.Equal(t, imageType, "gif", "expected gif")
-
-	// private
-	emojiImage, resp = Client.GetPrivateEmojiImage(emoji1.Id, th.BasicUser.Id)
-	CheckNoError(t, resp)
-	require.Greater(t, len(emojiImage), 0, "should return the image")
-
-	_, imageType, err = image.DecodeConfig(bytes.NewReader(emojiImage))
 	require.NoError(t, err)
 	require.Equal(t, imageType, "gif", "expected gif")
 
