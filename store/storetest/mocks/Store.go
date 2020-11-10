@@ -206,6 +206,22 @@ func (_m *Store) Emoji() store.EmojiStore {
 	return r0
 }
 
+// EmojiAccess provides a mock function with given fields:
+func (_m *Store) EmojiAccess() store.EmojiAccessStore {
+	ret := _m.Called()
+
+	var r0 store.EmojiAccessStore
+	if rf, ok := ret.Get(0).(func() store.EmojiAccessStore); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(store.EmojiAccessStore)
+		}
+	}
+
+	return r0
+}
+
 // FileInfo provides a mock function with given fields:
 func (_m *Store) FileInfo() store.FileInfoStore {
 	ret := _m.Called()

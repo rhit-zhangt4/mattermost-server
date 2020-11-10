@@ -28,6 +28,10 @@ func (api *API) InitEmoji() {
 	api.BaseRoutes.Emoji.Handle("", api.ApiSessionRequired(getEmoji)).Methods("GET")
 	api.BaseRoutes.EmojiByName.Handle("", api.ApiSessionRequired(getEmojiByName)).Methods("GET")
 	api.BaseRoutes.Emoji.Handle("/image", api.ApiSessionRequiredTrustRequester(getEmojiImage)).Methods("GET")
+	//TODO: add new router
+	api.BaseRoutes.Emojis.Handle("/private", api.ApiSessionRequired(createPrivateEmoji)).Methods("POST")
+	api.BaseRoutes.Emojis.Handle("/private", api.ApiSessionRequired(getPrivateEmojiList)).Methods("GET")
+	api.BaseRoutes.Emoji.Handle("/privateimage", api.ApiSessionRequiredTrustRequester(getPrivateEmojiImage)).Methods("GET")
 }
 
 func createEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -98,6 +102,73 @@ func createEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
 	auditRec.Success()
 	w.Write([]byte(newEmoji.ToJson()))
 }
+func createPrivateEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
+	defer io.Copy(ioutil.Discard, r.Body)
+
+	if !*c.App.Config().ServiceSettings.EnableCustomEmoji {
+		c.Err = model.NewAppError("createEmoji", "api.emoji.disabled.app_error", nil, "", http.StatusNotImplemented)
+		return
+	}
+
+	if r.ContentLength > app.MaxEmojiFileSize {
+		c.Err = model.NewAppError("createEmoji", "api.emoji.create.too_large.app_error", nil, "", http.StatusRequestEntityTooLarge)
+		return
+	}
+
+	if err := r.ParseMultipartForm(app.MaxEmojiFileSize); err != nil {
+		c.Err = model.NewAppError("createEmoji", "api.emoji.create.parse.app_error", nil, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	auditRec := c.MakeAuditRecord("createEmoji", audit.Fail)
+	defer c.LogAuditRec(auditRec)
+
+	// Allow any user with CREATE_EMOJIS permission at Team level to create emojis at system level
+	memberships, err := c.App.GetTeamMembersForUser(c.App.Session().UserId)
+
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	if !c.App.SessionHasPermissionTo(*c.App.Session(), model.PERMISSION_CREATE_EMOJIS) {
+		hasPermission := false
+		for _, membership := range memberships {
+			if c.App.SessionHasPermissionToTeam(*c.App.Session(), membership.TeamId, model.PERMISSION_CREATE_EMOJIS) {
+				hasPermission = true
+				break
+			}
+		}
+		if !hasPermission {
+			c.SetPermissionError(model.PERMISSION_CREATE_EMOJIS)
+			return
+		}
+	}
+
+	m := r.MultipartForm
+	props := m.Value
+
+	if len(props["emoji"]) == 0 {
+		c.SetInvalidParam("emoji")
+		return
+	}
+	emoji := model.EmojiFromJson(strings.NewReader(props["emoji"][0]))
+	if emoji == nil {
+		c.SetInvalidParam("emoji")
+		return
+	}
+
+	auditRec.AddMeta("emoji", emoji)
+
+	newEmoji, err := c.App.CreatePrivateEmoji(c.App.Session().UserId, emoji, m)
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	auditRec.Success()
+	w.Write([]byte(newEmoji.ToJson()))
+}
 
 func getEmojiList(c *Context, w http.ResponseWriter, r *http.Request) {
 	if !*c.App.Config().ServiceSettings.EnableCustomEmoji {
@@ -112,6 +183,27 @@ func getEmojiList(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	listEmoji, err := c.App.GetEmojiList(c.Params.Page, c.Params.PerPage, sort)
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	w.Write([]byte(model.EmojiListToJson(listEmoji)))
+}
+func getPrivateEmojiList(c *Context, w http.ResponseWriter, r *http.Request) {
+	if !*c.App.Config().ServiceSettings.EnableCustomEmoji {
+		c.Err = model.NewAppError("getEmoji", "api.emoji.disabled.app_error", nil, "", http.StatusNotImplemented)
+		return
+	}
+	sort := r.URL.Query().Get("sort")
+	if sort != "" && sort != model.EMOJI_SORT_BY_NAME {
+		c.SetInvalidUrlParam("sort")
+		return
+	}
+
+	userid := c.App.Session().UserId
+
+	listEmoji, err := c.App.GetPrivateEmojiList(c.Params.Page, c.Params.PerPage, sort, userid)
 	if err != nil {
 		c.Err = err
 		return
@@ -234,6 +326,35 @@ func getEmojiImage(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	image, imageType, err := c.App.GetEmojiImage(c.Params.EmojiId)
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/"+imageType)
+	w.Header().Set("Cache-Control", "max-age=2592000, public")
+	w.Write(image)
+}
+
+func getPrivateEmojiImage(c *Context, w http.ResponseWriter, r *http.Request) {
+	c.RequireEmojiId()
+	if c.Err != nil {
+		return
+	}
+
+	if !*c.App.Config().ServiceSettings.EnableCustomEmoji {
+		c.Err = model.NewAppError("getEmojiImage", "api.emoji.disabled.app_error", nil, "", http.StatusNotImplemented)
+		return
+	}
+
+	userid := r.URL.Query().Get("userid")
+	if userid == "" {
+		c.SetInvalidUrlParam("userid")
+		return
+	}
+	// userid := c.App.Session().UserId
+
+	image, imageType, err := c.App.GetPrivateEmojiImage(c.Params.EmojiId, userid)
 	if err != nil {
 		c.Err = err
 		return

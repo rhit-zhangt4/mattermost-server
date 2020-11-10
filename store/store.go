@@ -39,6 +39,7 @@ type Store interface {
 	License() LicenseStore
 	Token() TokenStore
 	Emoji() EmojiStore
+	EmojiAccess() EmojiAccessStore
 	Status() StatusStore
 	FileInfo() FileInfoStore
 	Reaction() ReactionStore
@@ -522,6 +523,17 @@ type EmojiStore interface {
 	GetList(offset, limit int, sort string) ([]*model.Emoji, error)
 	Delete(emoji *model.Emoji, time int64) error
 	Search(name string, prefixOnly bool, limit int) ([]*model.Emoji, error)
+}
+
+type EmojiAccessStore interface {
+	Save(emoji_access *model.EmojiAccess) (*model.EmojiAccess, error)
+	// Get(id string, allowFromCache bool) (*model.Emoji, error)
+	// GetByName(name string, allowFromCache bool) (*model.Emoji, error)
+	GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error)
+	GetMultipleByUserId(ids []string) ([]*model.EmojiAccess, error)
+	// GetList(offset, limit int, sort string) ([]*model.Emoji, error)
+	// Delete(emoji *model.Emoji, time int64) error
+	// Search(name string, prefixOnly bool, limit int) ([]*model.Emoji, error)
 }
 
 type StatusStore interface {

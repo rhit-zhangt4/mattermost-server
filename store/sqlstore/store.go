@@ -90,6 +90,7 @@ type SqlStore interface {
 	License() store.LicenseStore
 	Token() store.TokenStore
 	Emoji() store.EmojiStore
+	EmojiAccess() store.EmojiAccessStore
 	Status() store.StatusStore
 	FileInfo() store.FileInfoStore
 	Reaction() store.ReactionStore
