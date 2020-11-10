@@ -1,17 +1,11 @@
-name: Casual Chat Server CI
+name: Casual Chat Server Pull Request
 
 on:
-  push:
+  pull_request:
     branches: [ master ]
-  workflow_dispatch:
-    inputs:
-      deploy_to_qa:
-        description: "Deploy to QA? (yes/no)"
-        required: true
-        default: "no"
 
 env:
-  CC_BUILD_PREFIX: 'Casual Chat '
+  CC_BUILD_PREFIX: 'Casual Chat PR '
   COMPOSE_PROJECT_NAME: "ghactions"
 
 jobs:
@@ -130,10 +124,6 @@ jobs:
           - {
             DRIVER_NAME: mysql,
             DATA_SOURCE: "mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8"
-          }
-          - {
-            DRIVER_NAME: postgres,
-            DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10"
           }
     steps:
       - name: Export Environment Variables
@@ -279,17 +269,6 @@ jobs:
             MIGRATED_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest migrated > migrated.sql,
             LATEST_DUMP_CMD: mysql mysqldump --skip-opt --no-data --compact -u root -pmostest latest > latest.sql,
             REMOVE_CMD: mysql mysql -uroot -pmostest -e 'DROP DATABASE migrated; DROP DATABASE latest',
-          }
-          - {
-            DRIVER_NAME: postgres,
-            MIGRATED_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/migrated?sslmode=disable&connect_timeout=10",
-            LATEST_DATA_SOURCE: "postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10",
-            CREATE_CMD: postgres sh -c 'exec echo "CREATE DATABASE migrated; CREATE DATABASE latest;" | exec psql -U mmuser mattermost_test',
-            DB_IMPORT_CMD: postgres psql -U mmuser -d migrated < ../scripts/mattermost-postgresql-5.0.sql,
-            POST_RUN: echo "There is no known Postgres mismatch",
-            MIGRATED_DUMP_CMD: postgres pg_dump --schema-only -d migrated -U mmuser > migrated.sql,
-            LATEST_DUMP_CMD: postgres pg_dump --schema-only -d latest -U mmuser > latest.sql,
-            REMOVE_CMD: postgres sh -c 'exec echo "DROP DATABASE migrated; DROP DATABASE latest;" | exec psql -U mmuser mattermost_test'
           }
     steps:
       - name: Export Environment Variables
@@ -634,33 +613,6 @@ jobs:
           name: casualchat-mattermost-osx-${{ github.run_number }}
           path: |
             mattermost-server/dist/mattermost-enterprise-osx-amd64.tar.gz
-
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: self-hosted
-    needs: [ build ]
-    steps:
-      - name: Download Package
-        uses: actions/download-artifact@v2
-        with:
-          name: casualchat-mattermost-linux-${{ github.run_number }}
-
-      - name: Upload to Staging
-        run: scp mattermost-enterprise-linux-amd64.tar.gz csse@cchat-int-0.csse.rose-hulman.edu:/home/csse
-
-      - name: Deploy
-        run: ssh csse@cchat-int-0.csse.rose-hulman.edu $STAGING_DEPLOY_SCRIPT
-        env:
-          STAGING_DEPLOY_SCRIPT: ${{ secrets.STAGING_DEPLOY_SCRIPT }}
-
-  deploy-qa:
-    name: Deploy to QA
-    if: github.event.inputs.deploy_to_qa == 'yes'
-    runs-on: self-hosted
-    needs: [ build ]
-    steps:
-      - name: "Placeholder Action"
-        run: echo "Deploy"
 
   clean-docker:
     name: Clean Docker
