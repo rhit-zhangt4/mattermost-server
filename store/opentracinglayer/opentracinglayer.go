@@ -27,6 +27,7 @@ type OpenTracingLayer struct {
 	CommandWebhookStore       store.CommandWebhookStore
 	ComplianceStore           store.ComplianceStore
 	EmojiStore                store.EmojiStore
+	EmojiAccessStore          store.EmojiAccessStore
 	FileInfoStore             store.FileInfoStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
@@ -85,6 +86,10 @@ func (s *OpenTracingLayer) Compliance() store.ComplianceStore {
 
 func (s *OpenTracingLayer) Emoji() store.EmojiStore {
 	return s.EmojiStore
+}
+
+func (s *OpenTracingLayer) EmojiAccess() store.EmojiAccessStore {
+	return s.EmojiAccessStore
 }
 
 func (s *OpenTracingLayer) FileInfo() store.FileInfoStore {
@@ -217,6 +222,11 @@ type OpenTracingLayerComplianceStore struct {
 
 type OpenTracingLayerEmojiStore struct {
 	store.EmojiStore
+	Root *OpenTracingLayer
+}
+
+type OpenTracingLayerEmojiAccessStore struct {
+	store.EmojiAccessStore
 	Root *OpenTracingLayer
 }
 
@@ -2859,6 +2869,60 @@ func (s *OpenTracingLayerEmojiStore) Search(name string, prefixOnly bool, limit 
 
 	defer span.Finish()
 	result, err := s.EmojiStore.Search(name, prefixOnly, limit)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerEmojiAccessStore) GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "EmojiAccessStore.GetByUserIdAndEmojiId")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.EmojiAccessStore.GetByUserIdAndEmojiId(userId, emojiId)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerEmojiAccessStore) GetMultipleByUserId(ids []string) ([]*model.EmojiAccess, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "EmojiAccessStore.GetMultipleByUserId")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.EmojiAccessStore.GetMultipleByUserId(ids)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerEmojiAccessStore) Save(emoji_access *model.EmojiAccess) (*model.EmojiAccess, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "EmojiAccessStore.Save")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.EmojiAccessStore.Save(emoji_access)
 	if err != nil {
 		span.LogFields(spanlog.Error(err))
 		ext.Error.Set(span, true)
@@ -9476,6 +9540,7 @@ func New(childStore store.Store, ctx context.Context) *OpenTracingLayer {
 	newStore.CommandWebhookStore = &OpenTracingLayerCommandWebhookStore{CommandWebhookStore: childStore.CommandWebhook(), Root: &newStore}
 	newStore.ComplianceStore = &OpenTracingLayerComplianceStore{ComplianceStore: childStore.Compliance(), Root: &newStore}
 	newStore.EmojiStore = &OpenTracingLayerEmojiStore{EmojiStore: childStore.Emoji(), Root: &newStore}
+	newStore.EmojiAccessStore = &OpenTracingLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
 	newStore.FileInfoStore = &OpenTracingLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
 	newStore.GroupStore = &OpenTracingLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &OpenTracingLayerJobStore{JobStore: childStore.Job(), Root: &newStore}
