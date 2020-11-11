@@ -13,6 +13,10 @@ on:
 env:
   CC_BUILD_PREFIX: 'Casual Chat '
   COMPOSE_PROJECT_NAME: "ghactions"
+  STAGING_VM: "cchat-int-0.csse.rose-hulman.edu"
+  STAGING_USER: "csse"
+  QA_VM: "cchat-ext-1.csse.rose-hulman.edu"
+  QA_USER: "csse"
 
 jobs:
   check-env:
@@ -646,10 +650,10 @@ jobs:
           name: casualchat-mattermost-linux-${{ github.run_number }}
 
       - name: Upload to Staging
-        run: scp mattermost-enterprise-linux-amd64.tar.gz csse@cchat-int-0.csse.rose-hulman.edu:/home/csse
+        run: scp mattermost-enterprise-linux-amd64.tar.gz $STAGING_USER@$STAGING_VM:/home/$STAGING_USER
 
       - name: Deploy
-        run: ssh csse@cchat-int-0.csse.rose-hulman.edu $STAGING_DEPLOY_SCRIPT
+        run: ssh $STAGING_USER@$STAGING_VM $STAGING_DEPLOY_SCRIPT
         env:
           STAGING_DEPLOY_SCRIPT: ${{ secrets.STAGING_DEPLOY_SCRIPT }}
 
@@ -659,8 +663,18 @@ jobs:
     runs-on: self-hosted
     needs: [ build ]
     steps:
-      - name: "Placeholder Action"
-        run: echo "Deploy"
+      - name: Download Package
+        uses: actions/download-artifact@v2
+        with:
+          name: casualchat-mattermost-linux-${{ github.run_number }}
+
+      - name: Upload to QA
+        run: scp mattermost-enterprise-linux-amd64.tar.gz $QA_USER@$QA_VM:/home/$QA_USER
+
+      - name: Deploy
+        run: ssh $QA_USER@$QA_VM $QA_DEPLOY_SCRIPT
+        env:
+          QA_DEPLOY_SCRIPT: ${{ secrets.QA_DEPLOY_SCRIPT }}
 
   clean-docker:
     name: Clean Docker
