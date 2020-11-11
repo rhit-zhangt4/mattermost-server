@@ -29,6 +29,7 @@ type RetryLayer struct {
 	CommandWebhookStore       store.CommandWebhookStore
 	ComplianceStore           store.ComplianceStore
 	EmojiStore                store.EmojiStore
+	EmojiAccessStore          store.EmojiAccessStore
 	FileInfoStore             store.FileInfoStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
@@ -87,6 +88,10 @@ func (s *RetryLayer) Compliance() store.ComplianceStore {
 
 func (s *RetryLayer) Emoji() store.EmojiStore {
 	return s.EmojiStore
+}
+
+func (s *RetryLayer) EmojiAccess() store.EmojiAccessStore {
+	return s.EmojiAccessStore
 }
 
 func (s *RetryLayer) FileInfo() store.FileInfoStore {
@@ -219,6 +224,11 @@ type RetryLayerComplianceStore struct {
 
 type RetryLayerEmojiStore struct {
 	store.EmojiStore
+	Root *RetryLayer
+}
+
+type RetryLayerEmojiAccessStore struct {
+	store.EmojiAccessStore
 	Root *RetryLayer
 }
 
@@ -2135,6 +2145,66 @@ func (s *RetryLayerEmojiStore) Search(name string, prefixOnly bool, limit int) (
 	tries := 0
 	for {
 		result, err := s.EmojiStore.Search(name, prefixOnly, limit)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerEmojiAccessStore) GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error) {
+
+	tries := 0
+	for {
+		result, err := s.EmojiAccessStore.GetByUserIdAndEmojiId(userId, emojiId)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerEmojiAccessStore) GetMultipleByUserId(ids []string) ([]*model.EmojiAccess, error) {
+
+	tries := 0
+	for {
+		result, err := s.EmojiAccessStore.GetMultipleByUserId(ids)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerEmojiAccessStore) Save(emoji_access *model.EmojiAccess) (*model.EmojiAccess, error) {
+
+	tries := 0
+	for {
+		result, err := s.EmojiAccessStore.Save(emoji_access)
 		if err == nil {
 			return result, nil
 		}
@@ -6826,6 +6896,7 @@ func New(childStore store.Store) *RetryLayer {
 	newStore.CommandWebhookStore = &RetryLayerCommandWebhookStore{CommandWebhookStore: childStore.CommandWebhook(), Root: &newStore}
 	newStore.ComplianceStore = &RetryLayerComplianceStore{ComplianceStore: childStore.Compliance(), Root: &newStore}
 	newStore.EmojiStore = &RetryLayerEmojiStore{EmojiStore: childStore.Emoji(), Root: &newStore}
+	newStore.EmojiAccessStore = &RetryLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
 	newStore.FileInfoStore = &RetryLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
 	newStore.GroupStore = &RetryLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &RetryLayerJobStore{JobStore: childStore.Job(), Root: &newStore}

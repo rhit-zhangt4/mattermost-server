@@ -27,6 +27,7 @@ type TimerLayer struct {
 	CommandWebhookStore       store.CommandWebhookStore
 	ComplianceStore           store.ComplianceStore
 	EmojiStore                store.EmojiStore
+	EmojiAccessStore          store.EmojiAccessStore
 	FileInfoStore             store.FileInfoStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
@@ -85,6 +86,10 @@ func (s *TimerLayer) Compliance() store.ComplianceStore {
 
 func (s *TimerLayer) Emoji() store.EmojiStore {
 	return s.EmojiStore
+}
+
+func (s *TimerLayer) EmojiAccess() store.EmojiAccessStore {
+	return s.EmojiAccessStore
 }
 
 func (s *TimerLayer) FileInfo() store.FileInfoStore {
@@ -217,6 +222,11 @@ type TimerLayerComplianceStore struct {
 
 type TimerLayerEmojiStore struct {
 	store.EmojiStore
+	Root *TimerLayer
+}
+
+type TimerLayerEmojiAccessStore struct {
+	store.EmojiAccessStore
 	Root *TimerLayer
 }
 
@@ -2621,6 +2631,54 @@ func (s *TimerLayerEmojiStore) Search(name string, prefixOnly bool, limit int) (
 			success = "true"
 		}
 		s.Root.Metrics.ObserveStoreMethodDuration("EmojiStore.Search", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerEmojiAccessStore) GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error) {
+	start := timemodule.Now()
+
+	result, err := s.EmojiAccessStore.GetByUserIdAndEmojiId(userId, emojiId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("EmojiAccessStore.GetByUserIdAndEmojiId", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerEmojiAccessStore) GetMultipleByUserId(ids []string) ([]*model.EmojiAccess, error) {
+	start := timemodule.Now()
+
+	result, err := s.EmojiAccessStore.GetMultipleByUserId(ids)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("EmojiAccessStore.GetMultipleByUserId", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerEmojiAccessStore) Save(emoji_access *model.EmojiAccess) (*model.EmojiAccess, error) {
+	start := timemodule.Now()
+
+	result, err := s.EmojiAccessStore.Save(emoji_access)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("EmojiAccessStore.Save", success, elapsed)
 	}
 	return result, err
 }
@@ -8570,6 +8628,7 @@ func New(childStore store.Store, metrics einterfaces.MetricsInterface) *TimerLay
 	newStore.CommandWebhookStore = &TimerLayerCommandWebhookStore{CommandWebhookStore: childStore.CommandWebhook(), Root: &newStore}
 	newStore.ComplianceStore = &TimerLayerComplianceStore{ComplianceStore: childStore.Compliance(), Root: &newStore}
 	newStore.EmojiStore = &TimerLayerEmojiStore{EmojiStore: childStore.Emoji(), Root: &newStore}
+	newStore.EmojiAccessStore = &TimerLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
 	newStore.FileInfoStore = &TimerLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
 	newStore.GroupStore = &TimerLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &TimerLayerJobStore{JobStore: childStore.Job(), Root: &newStore}
