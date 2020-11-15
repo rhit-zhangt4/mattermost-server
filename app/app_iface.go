@@ -147,7 +147,7 @@ type AppIface interface {
 	GetClusterPluginStatuses() (model.PluginStatuses, *model.AppError)
 	// GetConfigFile proxies access to the given configuration file to the underlying config store.
 	GetConfigFile(name string) ([]byte, error)
-	// GetEmojiStaticUrl returns a relative static URL for system default emojis,
+	// GetEmojiStaticUrl returns a frelative static URL for system default emojis,
 	// and the API route for custom ones. Errors if not found or if custom and deleted.
 	GetEmojiStaticUrl(emojiName string) (string, *model.AppError)
 	// GetEnvironmentConfig returns a map of configuration keys whose values have been overridden by an environment variable.
@@ -506,6 +506,7 @@ type AppIface interface {
 	GetAuthorizedAppsForUser(userId string, page, perPage int) ([]*model.OAuthApp, *model.AppError)
 	GetBrandImage() ([]byte, *model.AppError)
 	GetBulkReactionsForPosts(postIds []string) (map[string][]*model.Reaction, *model.AppError)
+	GetCanAccessPrivateEmojiImage(emojiId string, userId string) *model.AppError
 	GetChannel(channelId string) (*model.Channel, *model.AppError)
 	GetChannelByName(channelName, teamId string, includeDeleted bool) (*model.Channel, *model.AppError)
 	GetChannelByNameForTeamName(channelName, teamName string, includeDeleted bool) (*model.Channel, *model.AppError)
@@ -842,6 +843,7 @@ type AppIface interface {
 	SaveAndBroadcastStatus(status *model.Status)
 	SaveBrandImage(imageData *multipart.FileHeader) *model.AppError
 	SaveComplianceReport(job *model.Compliance) (*model.Compliance, *model.AppError)
+	SavePrivateEmoji(emojiId string, userId string) *model.AppError
 	SaveReactionForPost(reaction *model.Reaction) (*model.Reaction, *model.AppError)
 	SaveUserTermsOfService(userId, termsOfServiceId string, accepted bool) *model.AppError
 	SchemesIterator(scope string, batchSize int) func() []*model.Scheme

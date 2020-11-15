@@ -4268,6 +4268,28 @@ func (a *OpenTracingAppLayer) GetBulkReactionsForPosts(postIds []string) (map[st
 	return resultVar0, resultVar1
 }
 
+func (a *OpenTracingAppLayer) GetCanAccessPrivateEmojiImage(emojiId string, userId string) *model.AppError {
+	origCtx := a.ctx
+	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.GetCanAccessPrivateEmojiImage")
+
+	a.ctx = newCtx
+	a.app.Srv().Store.SetContext(newCtx)
+	defer func() {
+		a.app.Srv().Store.SetContext(origCtx)
+		a.ctx = origCtx
+	}()
+
+	defer span.Finish()
+	resultVar0 := a.app.GetCanAccessPrivateEmojiImage(emojiId, userId)
+
+	if resultVar0 != nil {
+		span.LogFields(spanlog.Error(resultVar0))
+		ext.Error.Set(span, true)
+	}
+
+	return resultVar0
+}
+
 func (a *OpenTracingAppLayer) GetChannel(channelId string) (*model.Channel, *model.AppError) {
 	origCtx := a.ctx
 	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.GetChannel")
@@ -12104,6 +12126,28 @@ func (a *OpenTracingAppLayer) SaveConfig(newCfg *model.Config, sendConfigChangeC
 
 	defer span.Finish()
 	resultVar0 := a.app.SaveConfig(newCfg, sendConfigChangeClusterMessage)
+
+	if resultVar0 != nil {
+		span.LogFields(spanlog.Error(resultVar0))
+		ext.Error.Set(span, true)
+	}
+
+	return resultVar0
+}
+
+func (a *OpenTracingAppLayer) SavePrivateEmoji(emojiId string, userId string) *model.AppError {
+	origCtx := a.ctx
+	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.SavePrivateEmoji")
+
+	a.ctx = newCtx
+	a.app.Srv().Store.SetContext(newCtx)
+	defer func() {
+		a.app.Srv().Store.SetContext(origCtx)
+		a.ctx = origCtx
+	}()
+
+	defer span.Finish()
+	resultVar0 := a.app.SavePrivateEmoji(emojiId, userId)
 
 	if resultVar0 != nil {
 		span.LogFields(spanlog.Error(resultVar0))

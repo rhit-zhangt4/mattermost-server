@@ -32,6 +32,8 @@ func (api *API) InitEmoji() {
 	api.BaseRoutes.Emojis.Handle("/private", api.ApiSessionRequired(createPrivateEmoji)).Methods("POST")
 	api.BaseRoutes.Emojis.Handle("/private", api.ApiSessionRequired(getPrivateEmojiList)).Methods("GET")
 	api.BaseRoutes.Emoji.Handle("/privateimage", api.ApiSessionRequiredTrustRequester(getPrivateEmojiImage)).Methods("GET")
+	api.BaseRoutes.Emoji.Handle("/checkprivate", api.ApiSessionRequiredTrustRequester(getCanAccessPrivateEmojiImage)).Methods("GET")
+	api.BaseRoutes.Emoji.Handle("/save", api.ApiSessionRequiredTrustRequester(savePrivateEmoji)).Methods("POST")
 }
 
 func createEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -102,6 +104,7 @@ func createEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
 	auditRec.Success()
 	w.Write([]byte(newEmoji.ToJson()))
 }
+
 func createPrivateEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
 	defer io.Copy(ioutil.Discard, r.Body)
 
@@ -334,6 +337,54 @@ func getEmojiImage(c *Context, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/"+imageType)
 	w.Header().Set("Cache-Control", "max-age=2592000, public")
 	w.Write(image)
+}
+
+func savePrivateEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
+	c.RequireEmojiId()
+	if c.Err != nil {
+		return
+	}
+	if !*c.App.Config().ServiceSettings.EnableCustomEmoji {
+		c.Err = model.NewAppError("getEmojiImage", "api.emoji.disabled.app_error", nil, "", http.StatusNotImplemented)
+		return
+	}
+	userid := r.URL.Query().Get("userid")
+	if userid == "" {
+		c.SetInvalidUrlParam("userid")
+		return
+	}
+	err := c.App.SavePrivateEmoji(c.Params.EmojiId, userid)
+
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	ReturnStatusOK(w)
+
+}
+
+func getCanAccessPrivateEmojiImage(c *Context, w http.ResponseWriter, r *http.Request) {
+	c.RequireEmojiId()
+	if c.Err != nil {
+		return
+	}
+	if !*c.App.Config().ServiceSettings.EnableCustomEmoji {
+		c.Err = model.NewAppError("getEmojiImage", "api.emoji.disabled.app_error", nil, "", http.StatusNotImplemented)
+		return
+	}
+	userid := r.URL.Query().Get("userid")
+	if userid == "" {
+		c.SetInvalidUrlParam("userid")
+		return
+	}
+	err := c.App.GetCanAccessPrivateEmojiImage(c.Params.EmojiId, userid)
+
+	if err != nil {
+		return
+	}
+
+	ReturnStatusOK(w)
 }
 
 func getPrivateEmojiImage(c *Context, w http.ResponseWriter, r *http.Request) {
