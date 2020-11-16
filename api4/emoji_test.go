@@ -344,6 +344,67 @@ func TestGetPrivateEmojiList(t *testing.T) {
 	// require.Greater(t, len(listEmoji), 0, "should return more than 0")
 }
 
+func TestCanAccessEmoji(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+	Client := th.Client
+
+	EnableCustomEmoji := *th.App.Config().ServiceSettings.EnableCustomEmoji
+	defer func() {
+		th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = EnableCustomEmoji })
+	}()
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
+
+	defaultRolePermissions := th.SaveDefaultRolePermissions()
+	defer func() {
+		th.RestoreDefaultRolePermissions(defaultRolePermissions)
+	}()
+	emoji := &model.Emoji{
+		CreatorId: th.BasicUser.Id,
+		Name:      model.NewId(),
+	}
+	newEmoji, resp := Client.CreatePrivateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+	CheckNoError(t, resp)
+
+	ok, resp := Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser.Id)
+	CheckNoError(t, resp)
+	require.True(t, ok, "delete did not return OK")
+
+}
+
+func TestSaveEmoji(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+	Client := th.Client
+
+	EnableCustomEmoji := *th.App.Config().ServiceSettings.EnableCustomEmoji
+	defer func() {
+		th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = EnableCustomEmoji })
+	}()
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
+
+	defaultRolePermissions := th.SaveDefaultRolePermissions()
+	defer func() {
+		th.RestoreDefaultRolePermissions(defaultRolePermissions)
+	}()
+	emoji := &model.Emoji{
+		CreatorId: th.BasicUser.Id,
+		Name:      model.NewId(),
+	}
+	newEmoji, resp := Client.CreatePrivateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+	CheckNoError(t, resp)
+
+	r, resp := Client.SavePrivateEmoji(newEmoji.Id, th.BasicUser2.Id)
+	// CheckForbiddenStatus(t, resp)
+	CheckNoError(t, resp)
+	require.True(t, r, "get save private did not return OK")
+
+	ok, resp := Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser2.Id)
+	CheckNoError(t, resp)
+	require.True(t, ok, "get access did not return OK")
+
+}
+
 func TestDeleteEmoji(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()

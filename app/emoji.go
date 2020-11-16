@@ -339,6 +339,31 @@ func (a *App) GetEmojiImage(emojiId string) ([]byte, string, *model.AppError) {
 
 	return img, imageType, nil
 }
+func (a *App) GetCanAccessPrivateEmojiImage(emojiId string, userId string) *model.AppError {
+	_, accessErr := a.Srv().Store.EmojiAccess().GetByUserIdAndEmojiId(userId, emojiId)
+	if accessErr != nil {
+		return model.NewAppError("getEmojiImage", "api.emoji.get_image.read.app_error", nil, accessErr.Error(), http.StatusNotFound)
+	}
+	return nil
+}
+
+func (a *App) SavePrivateEmoji(emojiId string, userId string) *model.AppError {
+	_, accessErr := a.Srv().Store.EmojiAccess().GetByUserIdAndEmojiId(userId, emojiId)
+	if accessErr == nil {
+		return model.NewAppError("createEmoji", "api.emoji.create.duplicate.app_error", nil, "", http.StatusBadRequest)
+	}
+	emoji_access := &model.EmojiAccess{
+		EmojiId: emojiId,
+		UserId:  userId,
+	}
+	_, err := a.Srv().Store.EmojiAccess().Save(emoji_access)
+	if err != nil {
+		// return err
+		return model.NewAppError("CreateEmoji", "app.emojiAceess.create.internal_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	return nil
+
+}
 
 func (a *App) GetPrivateEmojiImage(emojiId string, userId string) ([]byte, string, *model.AppError) {
 	_, accessErr := a.Srv().Store.EmojiAccess().GetByUserIdAndEmojiId(userId, emojiId)
@@ -382,7 +407,7 @@ func (a *App) SearchEmoji(name string, prefixOnly bool, limit int) ([]*model.Emo
 	return list, nil
 }
 
-// GetEmojiStaticUrl returns a relative static URL for system default emojis,
+// GetEmojiStaticUrl returns a frelative static URL for system default emojis,
 // and the API route for custom ones. Errors if not found or if custom and deleted.
 func (a *App) GetEmojiStaticUrl(emojiName string) (string, *model.AppError) {
 	subPath, _ := utils.GetSubpathFromConfig(a.Config())

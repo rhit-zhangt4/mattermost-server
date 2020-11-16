@@ -25,7 +25,7 @@ func newSqlEmojiAccessStore(sqlStore SqlStore, metrics einterfaces.MetricsInterf
 	}
 
 	for _, db := range sqlStore.GetAllConns() {
-		table := db.AddTableWithName(model.EmojiAccess{}, "EmojiAccess").SetKeys(false, "EmojiId")
+		table := db.AddTableWithName(model.EmojiAccess{}, "EmojiAccess").SetKeys(false, "EmojiId", "UserId")
 		table.ColMap("EmojiId").SetMaxSize(26)
 		table.ColMap("UserId").SetMaxSize(64)
 	}
