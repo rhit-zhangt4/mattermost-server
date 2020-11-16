@@ -348,10 +348,10 @@ func (a *App) GetCanAccessPrivateEmojiImage(emojiId string, userId string) *mode
 }
 
 func (a *App) SavePrivateEmoji(emojiId string, userId string) *model.AppError {
-	// _, accessErr := a.Srv().Store.EmojiAccess().GetByUserIdAndEmojiId(userId, emojiId)
-	// if accessErr == nil {
-	// 	return model.NewAppError("createEmoji", "api.emoji.create.duplicate.app_error", nil, "", http.StatusBadRequest)
-	// }
+	_, accessErr := a.Srv().Store.EmojiAccess().GetByUserIdAndEmojiId(userId, emojiId)
+	if accessErr == nil {
+		return model.NewAppError("createEmoji", "api.emoji.create.duplicate.app_error", nil, "", http.StatusBadRequest)
+	}
 	emoji_access := &model.EmojiAccess{
 		EmojiId: emojiId,
 		UserId:  userId,
