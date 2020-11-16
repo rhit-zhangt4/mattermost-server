@@ -21,7 +21,8 @@ func TestEmojiAccessStore(t *testing.T, ss store.Store) {
 
 var testEmojiId1 = model.NewId()
 var testUserId1 = model.NewId()
-var testEmojiId2 = model.NewId()
+
+// var testEmojiId2 = model.NewId()
 var testUserId2 = model.NewId()
 
 func testEmojiAccessGetByUserIdAndEmojiId(t *testing.T, ss store.Store) {
