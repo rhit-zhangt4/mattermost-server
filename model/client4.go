@@ -4661,6 +4661,26 @@ func (c *Client4) GetPrivateEmojiImage(emojiId string, userId string) ([]byte, *
 	return data, BuildResponse(r)
 }
 
+func (c *Client4) GetCanAccessPrivateEmojiImage(emojiId string, userId string) (bool, *Response) {
+	query := fmt.Sprintf("?userid=%v", userId)
+	r, apErr := c.DoApiGet(c.GetEmojiRoute(emojiId)+"/checkprivate"+query, "")
+	if apErr != nil {
+		return false, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	return CheckStatusOK(r), BuildResponse(r)
+}
+
+func (c *Client4) SavePrivateEmoji(emojiId string, userId string) (bool, *Response) {
+	query := fmt.Sprintf("?userid=%v", userId)
+	r, apErr := c.DoApiPost(c.GetEmojiRoute(emojiId)+"/save"+query, "")
+	if apErr != nil {
+		return false, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	return CheckStatusOK(r), BuildResponse(r)
+}
+
 // SearchEmoji returns a list of emoji matching some search criteria.
 func (c *Client4) SearchEmoji(search *EmojiSearch) ([]*Emoji, *Response) {
 	r, err := c.DoApiPost(c.GetEmojisRoute()+"/search", search.ToJson())
