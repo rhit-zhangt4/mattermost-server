@@ -381,10 +381,10 @@ func getCanAccessPrivateEmojiImage(c *Context, w http.ResponseWriter, r *http.Re
 	err := c.App.GetCanAccessPrivateEmojiImage(c.Params.EmojiId, userid)
 
 	if err != nil {
+		w.Write([]byte("false"))
 		return
 	}
-
-	ReturnStatusOK(w)
+	w.Write([]byte("true"))
 }
 
 func getPrivateEmojiImage(c *Context, w http.ResponseWriter, r *http.Request) {
