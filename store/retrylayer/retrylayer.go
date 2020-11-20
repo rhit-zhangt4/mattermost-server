@@ -39,6 +39,7 @@ type RetryLayer struct {
 	PluginStore               store.PluginStore
 	PostStore                 store.PostStore
 	PreferenceStore           store.PreferenceStore
+	PublicEmojiStore          store.PublicEmojiStore
 	ReactionStore             store.ReactionStore
 	RoleStore                 store.RoleStore
 	SchemeStore               store.SchemeStore
@@ -128,6 +129,10 @@ func (s *RetryLayer) Post() store.PostStore {
 
 func (s *RetryLayer) Preference() store.PreferenceStore {
 	return s.PreferenceStore
+}
+
+func (s *RetryLayer) PublicEmoji() store.PublicEmojiStore {
+	return s.PublicEmojiStore
 }
 
 func (s *RetryLayer) Reaction() store.ReactionStore {
@@ -274,6 +279,11 @@ type RetryLayerPostStore struct {
 
 type RetryLayerPreferenceStore struct {
 	store.PreferenceStore
+	Root *RetryLayer
+}
+
+type RetryLayerPublicEmojiStore struct {
+	store.PublicEmojiStore
 	Root *RetryLayer
 }
 
@@ -4136,6 +4146,46 @@ func (s *RetryLayerPreferenceStore) Save(preferences *model.Preferences) error {
 
 }
 
+func (s *RetryLayerPublicEmojiStore) GetAllPublicEmojis() ([]*model.PublicEmoji, error) {
+
+	tries := 0
+	for {
+		result, err := s.PublicEmojiStore.GetAllPublicEmojis()
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerPublicEmojiStore) Save(public_emoji *model.PublicEmoji) (*model.PublicEmoji, error) {
+
+	tries := 0
+	for {
+		result, err := s.PublicEmojiStore.Save(public_emoji)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
 func (s *RetryLayerReactionStore) BulkGetForPosts(postIds []string) ([]*model.Reaction, error) {
 
 	tries := 0
@@ -6906,6 +6956,7 @@ func New(childStore store.Store) *RetryLayer {
 	newStore.PluginStore = &RetryLayerPluginStore{PluginStore: childStore.Plugin(), Root: &newStore}
 	newStore.PostStore = &RetryLayerPostStore{PostStore: childStore.Post(), Root: &newStore}
 	newStore.PreferenceStore = &RetryLayerPreferenceStore{PreferenceStore: childStore.Preference(), Root: &newStore}
+	newStore.PublicEmojiStore = &RetryLayerPublicEmojiStore{PublicEmojiStore: childStore.PublicEmoji(), Root: &newStore}
 	newStore.ReactionStore = &RetryLayerReactionStore{ReactionStore: childStore.Reaction(), Root: &newStore}
 	newStore.RoleStore = &RetryLayerRoleStore{RoleStore: childStore.Role(), Root: &newStore}
 	newStore.SchemeStore = &RetryLayerSchemeStore{SchemeStore: childStore.Scheme(), Root: &newStore}

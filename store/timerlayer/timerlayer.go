@@ -37,6 +37,7 @@ type TimerLayer struct {
 	PluginStore               store.PluginStore
 	PostStore                 store.PostStore
 	PreferenceStore           store.PreferenceStore
+	PublicEmojiStore          store.PublicEmojiStore
 	ReactionStore             store.ReactionStore
 	RoleStore                 store.RoleStore
 	SchemeStore               store.SchemeStore
@@ -126,6 +127,10 @@ func (s *TimerLayer) Post() store.PostStore {
 
 func (s *TimerLayer) Preference() store.PreferenceStore {
 	return s.PreferenceStore
+}
+
+func (s *TimerLayer) PublicEmoji() store.PublicEmojiStore {
+	return s.PublicEmojiStore
 }
 
 func (s *TimerLayer) Reaction() store.ReactionStore {
@@ -272,6 +277,11 @@ type TimerLayerPostStore struct {
 
 type TimerLayerPreferenceStore struct {
 	store.PreferenceStore
+	Root *TimerLayer
+}
+
+type TimerLayerPublicEmojiStore struct {
+	store.PublicEmojiStore
 	Root *TimerLayer
 }
 
@@ -5063,6 +5073,38 @@ func (s *TimerLayerPreferenceStore) Save(preferences *model.Preferences) error {
 	return err
 }
 
+func (s *TimerLayerPublicEmojiStore) GetAllPublicEmojis() ([]*model.PublicEmoji, error) {
+	start := timemodule.Now()
+
+	result, err := s.PublicEmojiStore.GetAllPublicEmojis()
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("PublicEmojiStore.GetAllPublicEmojis", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerPublicEmojiStore) Save(public_emoji *model.PublicEmoji) (*model.PublicEmoji, error) {
+	start := timemodule.Now()
+
+	result, err := s.PublicEmojiStore.Save(public_emoji)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("PublicEmojiStore.Save", success, elapsed)
+	}
+	return result, err
+}
+
 func (s *TimerLayerReactionStore) BulkGetForPosts(postIds []string) ([]*model.Reaction, error) {
 	start := timemodule.Now()
 
@@ -8638,6 +8680,7 @@ func New(childStore store.Store, metrics einterfaces.MetricsInterface) *TimerLay
 	newStore.PluginStore = &TimerLayerPluginStore{PluginStore: childStore.Plugin(), Root: &newStore}
 	newStore.PostStore = &TimerLayerPostStore{PostStore: childStore.Post(), Root: &newStore}
 	newStore.PreferenceStore = &TimerLayerPreferenceStore{PreferenceStore: childStore.Preference(), Root: &newStore}
+	newStore.PublicEmojiStore = &TimerLayerPublicEmojiStore{PublicEmojiStore: childStore.PublicEmoji(), Root: &newStore}
 	newStore.ReactionStore = &TimerLayerReactionStore{ReactionStore: childStore.Reaction(), Root: &newStore}
 	newStore.RoleStore = &TimerLayerRoleStore{RoleStore: childStore.Role(), Root: &newStore}
 	newStore.SchemeStore = &TimerLayerSchemeStore{SchemeStore: childStore.Scheme(), Root: &newStore}

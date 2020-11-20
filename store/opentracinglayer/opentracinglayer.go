@@ -37,6 +37,7 @@ type OpenTracingLayer struct {
 	PluginStore               store.PluginStore
 	PostStore                 store.PostStore
 	PreferenceStore           store.PreferenceStore
+	PublicEmojiStore          store.PublicEmojiStore
 	ReactionStore             store.ReactionStore
 	RoleStore                 store.RoleStore
 	SchemeStore               store.SchemeStore
@@ -126,6 +127,10 @@ func (s *OpenTracingLayer) Post() store.PostStore {
 
 func (s *OpenTracingLayer) Preference() store.PreferenceStore {
 	return s.PreferenceStore
+}
+
+func (s *OpenTracingLayer) PublicEmoji() store.PublicEmojiStore {
+	return s.PublicEmojiStore
 }
 
 func (s *OpenTracingLayer) Reaction() store.ReactionStore {
@@ -272,6 +277,11 @@ type OpenTracingLayerPostStore struct {
 
 type OpenTracingLayerPreferenceStore struct {
 	store.PreferenceStore
+	Root *OpenTracingLayer
+}
+
+type OpenTracingLayerPublicEmojiStore struct {
+	store.PublicEmojiStore
 	Root *OpenTracingLayer
 }
 
@@ -5591,6 +5601,42 @@ func (s *OpenTracingLayerPreferenceStore) Save(preferences *model.Preferences) e
 	return err
 }
 
+func (s *OpenTracingLayerPublicEmojiStore) GetAllPublicEmojis() ([]*model.PublicEmoji, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "PublicEmojiStore.GetAllPublicEmojis")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.PublicEmojiStore.GetAllPublicEmojis()
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
+func (s *OpenTracingLayerPublicEmojiStore) Save(public_emoji *model.PublicEmoji) (*model.PublicEmoji, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "PublicEmojiStore.Save")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.PublicEmojiStore.Save(public_emoji)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
 func (s *OpenTracingLayerReactionStore) BulkGetForPosts(postIds []string) ([]*model.Reaction, error) {
 	origCtx := s.Root.Store.Context()
 	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "ReactionStore.BulkGetForPosts")
@@ -9550,6 +9596,7 @@ func New(childStore store.Store, ctx context.Context) *OpenTracingLayer {
 	newStore.PluginStore = &OpenTracingLayerPluginStore{PluginStore: childStore.Plugin(), Root: &newStore}
 	newStore.PostStore = &OpenTracingLayerPostStore{PostStore: childStore.Post(), Root: &newStore}
 	newStore.PreferenceStore = &OpenTracingLayerPreferenceStore{PreferenceStore: childStore.Preference(), Root: &newStore}
+	newStore.PublicEmojiStore = &OpenTracingLayerPublicEmojiStore{PublicEmojiStore: childStore.PublicEmoji(), Root: &newStore}
 	newStore.ReactionStore = &OpenTracingLayerReactionStore{ReactionStore: childStore.Reaction(), Root: &newStore}
 	newStore.RoleStore = &OpenTracingLayerRoleStore{RoleStore: childStore.Role(), Root: &newStore}
 	newStore.SchemeStore = &OpenTracingLayerSchemeStore{SchemeStore: childStore.Scheme(), Root: &newStore}
