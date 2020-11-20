@@ -34,6 +34,7 @@ func (api *API) InitEmoji() {
 	api.BaseRoutes.Emoji.Handle("/privateimage", api.ApiSessionRequiredTrustRequester(getPrivateEmojiImage)).Methods("GET")
 	api.BaseRoutes.Emoji.Handle("/checkprivate", api.ApiSessionRequiredTrustRequester(getCanAccessPrivateEmojiImage)).Methods("GET")
 	api.BaseRoutes.Emoji.Handle("/save", api.ApiSessionRequiredTrustRequester(savePrivateEmoji)).Methods("POST")
+	api.BaseRoutes.Emojis.Handle("/public", api.ApiSessionRequiredTrustRequester(getPublicEmojiList)).Methods("GET")
 }
 
 func createEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -186,6 +187,25 @@ func getEmojiList(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	listEmoji, err := c.App.GetEmojiList(c.Params.Page, c.Params.PerPage, sort)
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	w.Write([]byte(model.EmojiListToJson(listEmoji)))
+}
+func getPublicEmojiList(c *Context, w http.ResponseWriter, r *http.Request) {
+	if !*c.App.Config().ServiceSettings.EnableCustomEmoji {
+		c.Err = model.NewAppError("getEmoji", "api.emoji.disabled.app_error", nil, "", http.StatusNotImplemented)
+		return
+	}
+	sort := r.URL.Query().Get("sort")
+	if sort != "" && sort != model.EMOJI_SORT_BY_NAME {
+		c.SetInvalidUrlParam("sort")
+		return
+	}
+
+	listEmoji, err := c.App.GetPublicEmojiList(c.Params.Page, c.Params.PerPage, sort)
 	if err != nil {
 		c.Err = err
 		return

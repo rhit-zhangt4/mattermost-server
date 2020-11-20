@@ -4608,6 +4608,26 @@ func (c *Client4) GetSortedPrivateEmojiList(page, perPage int, sort string) ([]*
 	return EmojiListFromJson(r.Body), BuildResponse(r)
 }
 
+func (c *Client4) GetPublicEmojiList(page, perPage int) ([]*Emoji, *Response) {
+	query := fmt.Sprintf("?page=%v&per_page=%v", page, perPage)
+	r, err := c.DoApiGet(c.GetEmojisRoute()+"/public"+query, "")
+	if err != nil {
+		return nil, BuildErrorResponse(r, err)
+	}
+	defer closeBody(r)
+	return EmojiListFromJson(r.Body), BuildResponse(r)
+}
+
+func (c *Client4) GetSortedPublciEmojiList(page, perPage int, sort string) ([]*Emoji, *Response) {
+	query := fmt.Sprintf("?page=%v&per_page=%v&sort=%v", page, perPage, sort)
+	r, err := c.DoApiGet(c.GetEmojisRoute()+"/public"+query, "")
+	if err != nil {
+		return nil, BuildErrorResponse(r, err)
+	}
+	defer closeBody(r)
+	return EmojiListFromJson(r.Body), BuildResponse(r)
+}
+
 // GetEmoji returns a custom emoji based on the emojiId string.
 func (c *Client4) GetEmoji(emojiId string) (*Emoji, *Response) {
 	r, err := c.DoApiGet(c.GetEmojiRoute(emojiId), "")

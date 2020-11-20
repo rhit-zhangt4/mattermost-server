@@ -272,6 +272,56 @@ func TestGetEmojiList(t *testing.T) {
 	require.Greater(t, len(listEmoji), 0, "should return more than 0")
 }
 
+func TestGetPublicEmojiList(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+	Client := th.Client
+
+	EnableCustomEmoji := *th.App.Config().ServiceSettings.EnableCustomEmoji
+	defer func() {
+		th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = EnableCustomEmoji })
+	}()
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
+
+	emojis := []*model.Emoji{
+		{
+			CreatorId: th.BasicUser.Id,
+			Name:      model.NewId(),
+		},
+		{
+			CreatorId: th.BasicUser.Id,
+			Name:      model.NewId(),
+		},
+		{
+			CreatorId: th.BasicUser.Id,
+			Name:      model.NewId(),
+		},
+	}
+
+	for idx, emoji := range emojis {
+		newEmoji, resp := Client.CreateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+		CheckNoError(t, resp)
+		emojis[idx] = newEmoji
+	}
+
+	listEmoji, resp := Client.GetPublicEmojiList(0, 100)
+	CheckNoError(t, resp)
+	for _, emoji := range emojis {
+		found := false
+		for _, savedEmoji := range listEmoji {
+			if savedEmoji == nil {
+				break
+			}
+			if emoji.Id == savedEmoji.Id {
+				found = true
+				break
+			}
+		}
+		require.Truef(t, found, "failed to get emoji with id %v, %v", emoji.Id, len(listEmoji))
+	}
+
+}
+
 func TestGetPrivateEmojiList(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
