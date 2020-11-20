@@ -13,8 +13,8 @@ type PublicEmoji struct {
 	EmojiId string `json:"emoji_id"`
 }
 
-func (emoji *PublicEmoji) IsValid() *AppError {
-	if !IsValidId(emoji.EmojiId) {
+func (public_emoji *PublicEmoji) IsValid() *AppError {
+	if !IsValidId(public_emoji.EmojiId) {
 		return NewAppError("Emoji.IsValid", "model.emoji.id.app_error", nil, "", http.StatusBadRequest)
 	}
 	return nil
