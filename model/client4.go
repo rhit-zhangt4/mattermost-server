@@ -4661,14 +4661,18 @@ func (c *Client4) GetPrivateEmojiImage(emojiId string, userId string) ([]byte, *
 	return data, BuildResponse(r)
 }
 
-func (c *Client4) GetCanAccessPrivateEmojiImage(emojiId string, userId string) (bool, *Response) {
+func (c *Client4) GetCanAccessPrivateEmojiImage(emojiId string, userId string) ([]byte, *Response) {
 	query := fmt.Sprintf("?userid=%v", userId)
 	r, apErr := c.DoApiGet(c.GetEmojiRoute(emojiId)+"/checkprivate"+query, "")
 	if apErr != nil {
-		return false, BuildErrorResponse(r, apErr)
+		return nil, BuildErrorResponse(r, apErr)
 	}
 	defer closeBody(r)
-	return CheckStatusOK(r), BuildResponse(r)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, BuildErrorResponse(r, NewAppError("GetPrivateEmojiImage", "model.client.read_file.app_error", nil, err.Error(), r.StatusCode))
+	}
+	return data, BuildResponse(r)
 }
 
 func (c *Client4) SavePrivateEmoji(emojiId string, userId string) (bool, *Response) {

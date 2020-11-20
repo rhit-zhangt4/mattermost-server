@@ -368,7 +368,8 @@ func TestCanAccessEmoji(t *testing.T) {
 
 	ok, resp := Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser.Id)
 	CheckNoError(t, resp)
-	require.True(t, ok, "delete did not return OK")
+	require.Equal(t, ok, []byte("true"), "did not return true")
+	// require.True(t, ok, "delete did not return OK")
 
 }
 
@@ -401,7 +402,8 @@ func TestSaveEmoji(t *testing.T) {
 
 	ok, resp := Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser2.Id)
 	CheckNoError(t, resp)
-	require.True(t, ok, "get access did not return OK")
+	require.Equal(t, ok, []byte("true"), "did not return true")
+	// require.True(t, ok, "get access did not return OK")
 
 }
 
