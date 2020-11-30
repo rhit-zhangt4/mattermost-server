@@ -40,6 +40,7 @@ type Store interface {
 	Token() TokenStore
 	Emoji() EmojiStore
 	EmojiAccess() EmojiAccessStore
+	PublicEmoji() PublicEmojiStore
 	Status() StatusStore
 	FileInfo() FileInfoStore
 	Reaction() ReactionStore
@@ -534,6 +535,11 @@ type EmojiAccessStore interface {
 	// GetList(offset, limit int, sort string) ([]*model.Emoji, error)
 	// Delete(emoji *model.Emoji, time int64) error
 	// Search(name string, prefixOnly bool, limit int) ([]*model.Emoji, error)
+}
+
+type PublicEmojiStore interface {
+	Save(public_emoji *model.PublicEmoji) (*model.PublicEmoji, error)
+	GetAllPublicEmojis() ([]*model.PublicEmoji, error)
 }
 
 type StatusStore interface {
