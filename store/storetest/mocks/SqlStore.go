@@ -614,6 +614,22 @@ func (_m *SqlStore) Preference() store.PreferenceStore {
 	return r0
 }
 
+// PublicEmoji provides a mock function with given fields:
+func (_m *SqlStore) PublicEmoji() store.PublicEmojiStore {
+	ret := _m.Called()
+
+	var r0 store.PublicEmojiStore
+	if rf, ok := ret.Get(0).(func() store.PublicEmojiStore); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(store.PublicEmojiStore)
+		}
+	}
+
+	return r0
+}
+
 // Reaction provides a mock function with given fields:
 func (_m *SqlStore) Reaction() store.ReactionStore {
 	ret := _m.Called()

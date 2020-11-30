@@ -75,6 +75,15 @@ func (a *App) CreateEmoji(sessionUserId string, emoji *model.Emoji, multiPartIma
 		return nil, model.NewAppError("CreateEmoji", "app.emoji.create.internal_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 
+	public_emoji := &model.PublicEmoji{
+		EmojiId: emoji.Id,
+	}
+
+	_, err = a.Srv().Store.PublicEmoji().Save(public_emoji)
+	if err != nil {
+		return nil, model.NewAppError("CreatePublicEmoji", "app.emoji.create.internal_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+
 	message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_EMOJI_ADDED, "", "", "", nil)
 	message.Add("emoji", emoji.ToJson())
 	a.Publish(message)
@@ -162,6 +171,26 @@ func (a *App) GetPrivateEmojiList(page, perPage int, sort string, userid string)
 
 		emojis = append(emojis, emoji)
 
+	}
+
+	return emojis, nil
+}
+
+func (a *App) GetPublicEmojiList(page, perPage int, sort string) ([]*model.Emoji, *model.AppError) {
+	// TODO: change query with userid
+	//list, err := a.Srv().Store.Emoji().GetList(page*perPage, perPage, sort)
+	list, err := a.Srv().Store.PublicEmoji().GetAllPublicEmojis()
+	if err != nil {
+		return nil, model.NewAppError("GetPublicEmoji", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	var emojis []*model.Emoji
+	for _, v := range list {
+		emoji, err := a.Srv().Store.Emoji().Get(v.EmojiId, true)
+		if err != nil {
+			return nil, model.NewAppError("GetEmojiPublicList", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
+		}
+
+		emojis = append(emojis, emoji)
 	}
 
 	return emojis, nil
