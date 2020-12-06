@@ -247,9 +247,9 @@ func deleteEmojiAccess(c *Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteEmojiWithAccess(c *Context, w http.ResponseWriter, r *http.Request) {
-	emoji, err := c.App.GetEmoji(c.Params.EmojiId)
+	emoji, _ := c.App.GetEmoji(c.Params.EmojiId)
 
-	err = c.App.DeleteEmojiWithAccess(c.App.Session().UserId, emoji)
+	err := c.App.DeleteEmojiWithAccess(c.App.Session().UserId, emoji)
 	if err != nil {
 		c.Err = err
 		return

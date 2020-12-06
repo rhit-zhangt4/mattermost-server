@@ -508,7 +508,7 @@ func TestDeleteEmojiAccess(t *testing.T) {
 	_, resp = Client.DeleteEmojiWithAccess(newEmoji.Id)
 	CheckNoError(t, resp)
 
-	listEmoji, resp := Client.GetEmojiList(0, 100)
+	listEmoji, _ := Client.GetEmojiList(0, 100)
 	require.Len(t, listEmoji, 0, "should only return 0")
 
 }
