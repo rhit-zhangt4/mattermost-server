@@ -442,6 +442,7 @@ type AppIface interface {
 	DeleteChannel(channel *model.Channel, userId string) *model.AppError
 	DeleteCommand(commandId string) *model.AppError
 	DeleteEmoji(emoji *model.Emoji) *model.AppError
+	DeleteEmojiWithAccess(userid string, emoji *model.Emoji) *model.AppError
 	DeleteEphemeralPost(userId, postId string)
 	DeleteFlaggedPosts(postId string)
 	DeleteGroup(groupID string) (*model.Group, *model.AppError)
@@ -454,6 +455,7 @@ type AppIface interface {
 	DeletePost(postId, deleteByID string) (*model.Post, *model.AppError)
 	DeletePostFiles(post *model.Post)
 	DeletePreferences(userId string, preferences model.Preferences) *model.AppError
+	DeletePrivateEmojiAccess(userid string, emojiId string) *model.AppError
 	DeleteReactionForPost(reaction *model.Reaction) *model.AppError
 	DeleteScheme(schemeId string) (*model.Scheme, *model.AppError)
 	DeleteSidebarCategory(userId, teamId, categoryId string) *model.AppError

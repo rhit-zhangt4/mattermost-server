@@ -269,6 +269,49 @@ func (a *App) UploadEmojiImage(id string, imageData *multipart.FileHeader) *mode
 	return appErr
 }
 
+func (a *App) DeletePrivateEmojiAccess(userid string, emojiId string) *model.AppError {
+	if err := a.Srv().Store.EmojiAccess().DeleteAccessByUserIdAndEmojiId(userid, emojiId); err != nil {
+		return model.NewAppError("DeleteEmoji", "app.emoji.delete.app_error", nil, "id="+emojiId+", err="+err.Error(), http.StatusInternalServerError)
+	}
+	return nil
+}
+
+func (a *App) DeleteEmojiWithAccess(userid string, emoji *model.Emoji) *model.AppError {
+	isPublic := false
+	list, err := a.Srv().Store.PublicEmoji().GetAllPublicEmojis()
+	if err != nil {
+		return model.NewAppError("GetEmojiList", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	for _, v := range list {
+		if v.EmojiId == emoji.Id {
+			isPublic = true
+			break
+		}
+	}
+	if isPublic {
+		if err := a.Srv().Store.PublicEmoji().DeleteAccessByEmojiId(emoji.Id); err != nil {
+			return model.NewAppError("DeleteEmoji", "app.emoji.delete.app_error", nil, "id="+emoji.Id+", err="+err.Error(), http.StatusInternalServerError)
+		}
+	} else {
+		if err := a.Srv().Store.EmojiAccess().DeleteAccessByEmojiId(emoji.Id); err != nil {
+			return model.NewAppError("DeleteEmoji", "app.emoji.delete.app_error", nil, "id="+emoji.Id+", err="+err.Error(), http.StatusInternalServerError)
+		}
+	}
+	if err := a.Srv().Store.Emoji().Delete(emoji, model.GetMillis()); err != nil {
+		var nfErr *store.ErrNotFound
+		switch {
+		case errors.As(err, &nfErr):
+			return model.NewAppError("DeleteEmoji", "app.emoji.delete.no_results", nil, "id="+emoji.Id+", err="+err.Error(), http.StatusNotFound)
+		default:
+			return model.NewAppError("DeleteEmoji", "app.emoji.delete.app_error", nil, "id="+emoji.Id+", err="+err.Error(), http.StatusInternalServerError)
+		}
+	}
+
+	a.deleteEmojiImage(emoji.Id)
+	a.deleteReactionsForEmoji(emoji.Name)
+	return nil
+}
+
 func (a *App) DeleteEmoji(emoji *model.Emoji) *model.AppError {
 	if err := a.Srv().Store.Emoji().Delete(emoji, model.GetMillis()); err != nil {
 		var nfErr *store.ErrNotFound

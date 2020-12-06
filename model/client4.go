@@ -4588,6 +4588,24 @@ func (c *Client4) DeleteEmoji(emojiId string) (bool, *Response) {
 	return CheckStatusOK(r), BuildResponse(r)
 }
 
+func (c *Client4) DeletePrivateEmojiAccess(emojiId string) (bool, *Response) {
+	r, err := c.DoApiDelete(c.GetEmojiRoute(emojiId) + "/access")
+	if err != nil {
+		return false, BuildErrorResponse(r, err)
+	}
+	defer closeBody(r)
+	return CheckStatusOK(r), BuildResponse(r)
+}
+
+func (c *Client4) DeleteEmojiWithAccess(emojiId string) (bool, *Response) {
+	r, err := c.DoApiDelete(c.GetEmojiRoute(emojiId) + "/withAccess")
+	if err != nil {
+		return false, BuildErrorResponse(r, err)
+	}
+	defer closeBody(r)
+	return CheckStatusOK(r), BuildResponse(r)
+}
+
 func (c *Client4) GetPrivateEmojiList(page, perPage int) ([]*Emoji, *Response) {
 	query := fmt.Sprintf("?page=%v&per_page=%v", page, perPage)
 	r, err := c.DoApiGet(c.GetEmojisRoute()+"/private"+query, "")

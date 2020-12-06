@@ -90,3 +90,40 @@ func (es SqlEmojiAccessStore) GetMultipleByUserId(ids []string) ([]*model.EmojiA
 	}
 	return emojiAccesses, nil
 }
+
+func (es SqlEmojiAccessStore) DeleteAccessByUserIdAndEmojiId(userId string, emojiId string) error {
+
+	sql := `DELETE
+		FROM EmojiAccess
+	WHERE
+	UserId = :UserId
+	AND EmojiId = :EmojiId`
+
+	queryParams := map[string]string{
+		"UserId":  userId,
+		"EmojiId": emojiId,
+	}
+	_, err := es.GetMaster().Exec(sql, queryParams)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (es SqlEmojiAccessStore) DeleteAccessByEmojiId(emojiId string) error {
+	sql := `DELETE
+		FROM EmojiAccess
+	WHERE
+		EmojiId = :EmojiId`
+
+	queryParams := map[string]string{
+		"EmojiId": emojiId,
+	}
+
+	_, err := es.GetMaster().Exec(sql, queryParams)
+	if err != nil {
+		//mlog.Warn("Failed to delete access", mlog.Err(err))
+		return err
+	}
+	return nil
+}

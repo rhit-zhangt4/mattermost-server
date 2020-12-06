@@ -532,6 +532,8 @@ type EmojiAccessStore interface {
 	// GetByName(name string, allowFromCache bool) (*model.Emoji, error)
 	GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error)
 	GetMultipleByUserId(ids []string) ([]*model.EmojiAccess, error)
+	DeleteAccessByUserIdAndEmojiId(userId string, emojiId string) error
+	DeleteAccessByEmojiId(emojiId string) error
 	// GetList(offset, limit int, sort string) ([]*model.Emoji, error)
 	// Delete(emoji *model.Emoji, time int64) error
 	// Search(name string, prefixOnly bool, limit int) ([]*model.Emoji, error)
@@ -540,6 +542,7 @@ type EmojiAccessStore interface {
 type PublicEmojiStore interface {
 	Save(public_emoji *model.PublicEmoji) (*model.PublicEmoji, error)
 	GetAllPublicEmojis() ([]*model.PublicEmoji, error)
+	DeleteAccessByEmojiId(emojiId string) error
 }
 
 type StatusStore interface {

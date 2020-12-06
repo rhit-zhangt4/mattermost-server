@@ -17,6 +17,10 @@ func TestEmojiAccessStore(t *testing.T, ss store.Store) {
 	t.Run("SavePrivateEmoji", func(t *testing.T) { testSavePrivateEmoji(t, ss) })
 	t.Run("EmojiAccessGetByUserIdAndEmojiId", func(t *testing.T) { testEmojiAccessGetByUserIdAndEmojiId(t, ss) })
 	t.Run("EmojiAccessGetMultipleByUserId", func(t *testing.T) { testGetMultipleByUserId(t, ss) })
+	t.Run("DeleteEmojiAccessGetByUserIdAndEmojiId", func(t *testing.T) { testDeleteEmojiAccessGetByUserIdAndEmojiId(t, ss) })
+	t.Run("SavePrivateEmoji", func(t *testing.T) { testSavePrivateEmoji(t, ss) })
+	t.Run("DeleteEmojiAccessGetByEmojiId", func(t *testing.T) { testDeleteEmojiAccessGetByEmojiId(t, ss) })
+
 }
 
 var testEmojiId1 = model.NewId()
@@ -24,6 +28,22 @@ var testUserId1 = model.NewId()
 
 // var testEmojiId2 = model.NewId()
 var testUserId2 = model.NewId()
+
+func testDeleteEmojiAccessGetByUserIdAndEmojiId(t *testing.T, ss store.Store) {
+	err := ss.EmojiAccess().DeleteAccessByUserIdAndEmojiId(testUserId2, testEmojiId1)
+	require.Nil(t, err)
+	_, err = ss.EmojiAccess().GetByUserIdAndEmojiId(testUserId2, testEmojiId1)
+	require.NotNil(t, err)
+}
+
+func testDeleteEmojiAccessGetByEmojiId(t *testing.T, ss store.Store) {
+	err := ss.EmojiAccess().DeleteAccessByEmojiId(testEmojiId1)
+	require.Nil(t, err)
+	_, err = ss.EmojiAccess().GetByUserIdAndEmojiId(testUserId1, testEmojiId1)
+	require.NotNil(t, err)
+	_, err = ss.EmojiAccess().GetByUserIdAndEmojiId(testUserId2, testEmojiId1)
+	require.NotNil(t, err)
+}
 
 func testEmojiAccessGetByUserIdAndEmojiId(t *testing.T, ss store.Store) {
 	result, err := ss.EmojiAccess().GetByUserIdAndEmojiId(testUserId1, testEmojiId1)
