@@ -56,3 +56,21 @@ func (es SqlPublicEmojiStore) GetAllPublicEmojis() ([]*model.PublicEmoji, error)
 	}
 	return publicEmojies, nil
 }
+
+func (es SqlPublicEmojiStore) DeleteAccessByEmojiId(emojiId string) error {
+	sql := `DELETE
+		FROM PublicEmoji
+	WHERE
+		EmojiId = :EmojiId`
+
+	queryParams := map[string]string{
+		"EmojiId": emojiId,
+	}
+
+	_, err := es.GetMaster().Exec(sql, queryParams)
+	if err != nil {
+		//mlog.Warn("Failed to delete access", mlog.Err(err))
+		return err
+	}
+	return nil
+}

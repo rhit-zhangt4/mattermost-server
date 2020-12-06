@@ -2645,6 +2645,38 @@ func (s *TimerLayerEmojiStore) Search(name string, prefixOnly bool, limit int) (
 	return result, err
 }
 
+func (s *TimerLayerEmojiAccessStore) DeleteAccessByEmojiId(emojiId string) error {
+	start := timemodule.Now()
+
+	err := s.EmojiAccessStore.DeleteAccessByEmojiId(emojiId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("EmojiAccessStore.DeleteAccessByEmojiId", success, elapsed)
+	}
+	return err
+}
+
+func (s *TimerLayerEmojiAccessStore) DeleteAccessByUserIdAndEmojiId(userId string, emojiId string) error {
+	start := timemodule.Now()
+
+	err := s.EmojiAccessStore.DeleteAccessByUserIdAndEmojiId(userId, emojiId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("EmojiAccessStore.DeleteAccessByUserIdAndEmojiId", success, elapsed)
+	}
+	return err
+}
+
 func (s *TimerLayerEmojiAccessStore) GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error) {
 	start := timemodule.Now()
 
@@ -5069,6 +5101,22 @@ func (s *TimerLayerPreferenceStore) Save(preferences *model.Preferences) error {
 			success = "true"
 		}
 		s.Root.Metrics.ObserveStoreMethodDuration("PreferenceStore.Save", success, elapsed)
+	}
+	return err
+}
+
+func (s *TimerLayerPublicEmojiStore) DeleteAccessByEmojiId(emojiId string) error {
+	start := timemodule.Now()
+
+	err := s.PublicEmojiStore.DeleteAccessByEmojiId(emojiId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("PublicEmojiStore.DeleteAccessByEmojiId", success, elapsed)
 	}
 	return err
 }

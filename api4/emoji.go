@@ -35,6 +35,8 @@ func (api *API) InitEmoji() {
 	api.BaseRoutes.Emoji.Handle("/checkprivate", api.ApiSessionRequiredTrustRequester(getCanAccessPrivateEmojiImage)).Methods("GET")
 	api.BaseRoutes.Emoji.Handle("/save", api.ApiSessionRequiredTrustRequester(savePrivateEmoji)).Methods("POST")
 	api.BaseRoutes.Emojis.Handle("/public", api.ApiSessionRequiredTrustRequester(getPublicEmojiList)).Methods("GET")
+	api.BaseRoutes.Emoji.Handle("/access", api.ApiSessionRequired(deleteEmojiAccess)).Methods("DELETE")
+	api.BaseRoutes.Emoji.Handle("/withAccess", api.ApiSessionRequired(deleteEmojiWithAccess)).Methods("DELETE")
 }
 
 func createEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -233,6 +235,27 @@ func getPrivateEmojiList(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte(model.EmojiListToJson(listEmoji)))
+}
+
+func deleteEmojiAccess(c *Context, w http.ResponseWriter, r *http.Request) {
+	err := c.App.DeletePrivateEmojiAccess(c.App.Session().UserId, c.Params.EmojiId)
+	if err != nil {
+		c.Err = err
+		return
+	}
+	ReturnStatusOK(w)
+}
+
+func deleteEmojiWithAccess(c *Context, w http.ResponseWriter, r *http.Request) {
+	emoji, err := c.App.GetEmoji(c.Params.EmojiId)
+
+	err = c.App.DeleteEmojiWithAccess(c.App.Session().UserId, emoji)
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	ReturnStatusOK(w)
 }
 
 func deleteEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
