@@ -2170,6 +2170,46 @@ func (s *RetryLayerEmojiStore) Search(name string, prefixOnly bool, limit int) (
 
 }
 
+func (s *RetryLayerEmojiAccessStore) DeleteAccessByEmojiId(emojiId string) error {
+
+	tries := 0
+	for {
+		err := s.EmojiAccessStore.DeleteAccessByEmojiId(emojiId)
+		if err == nil {
+			return nil
+		}
+		if !isRepeatableError(err) {
+			return err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return err
+		}
+	}
+
+}
+
+func (s *RetryLayerEmojiAccessStore) DeleteAccessByUserIdAndEmojiId(userId string, emojiId string) error {
+
+	tries := 0
+	for {
+		err := s.EmojiAccessStore.DeleteAccessByUserIdAndEmojiId(userId, emojiId)
+		if err == nil {
+			return nil
+		}
+		if !isRepeatableError(err) {
+			return err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return err
+		}
+	}
+
+}
+
 func (s *RetryLayerEmojiAccessStore) GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error) {
 
 	tries := 0
@@ -4131,6 +4171,26 @@ func (s *RetryLayerPreferenceStore) Save(preferences *model.Preferences) error {
 	tries := 0
 	for {
 		err := s.PreferenceStore.Save(preferences)
+		if err == nil {
+			return nil
+		}
+		if !isRepeatableError(err) {
+			return err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return err
+		}
+	}
+
+}
+
+func (s *RetryLayerPublicEmojiStore) DeleteAccessByEmojiId(emojiId string) error {
+
+	tries := 0
+	for {
+		err := s.PublicEmojiStore.DeleteAccessByEmojiId(emojiId)
 		if err == nil {
 			return nil
 		}

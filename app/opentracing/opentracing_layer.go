@@ -2526,6 +2526,28 @@ func (a *OpenTracingAppLayer) DeleteEmoji(emoji *model.Emoji) *model.AppError {
 	return resultVar0
 }
 
+func (a *OpenTracingAppLayer) DeleteEmojiWithAccess(userid string, emoji *model.Emoji) *model.AppError {
+	origCtx := a.ctx
+	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.DeleteEmojiWithAccess")
+
+	a.ctx = newCtx
+	a.app.Srv().Store.SetContext(newCtx)
+	defer func() {
+		a.app.Srv().Store.SetContext(origCtx)
+		a.ctx = origCtx
+	}()
+
+	defer span.Finish()
+	resultVar0 := a.app.DeleteEmojiWithAccess(userid, emoji)
+
+	if resultVar0 != nil {
+		span.LogFields(spanlog.Error(resultVar0))
+		ext.Error.Set(span, true)
+	}
+
+	return resultVar0
+}
+
 func (a *OpenTracingAppLayer) DeleteEphemeralPost(userId string, postId string) {
 	origCtx := a.ctx
 	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.DeleteEphemeralPost")
@@ -2782,6 +2804,28 @@ func (a *OpenTracingAppLayer) DeletePreferences(userId string, preferences model
 
 	defer span.Finish()
 	resultVar0 := a.app.DeletePreferences(userId, preferences)
+
+	if resultVar0 != nil {
+		span.LogFields(spanlog.Error(resultVar0))
+		ext.Error.Set(span, true)
+	}
+
+	return resultVar0
+}
+
+func (a *OpenTracingAppLayer) DeletePrivateEmojiAccess(userid string, emojiId string) *model.AppError {
+	origCtx := a.ctx
+	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.DeletePrivateEmojiAccess")
+
+	a.ctx = newCtx
+	a.app.Srv().Store.SetContext(newCtx)
+	defer func() {
+		a.app.Srv().Store.SetContext(origCtx)
+		a.ctx = origCtx
+	}()
+
+	defer span.Finish()
+	resultVar0 := a.app.DeletePrivateEmojiAccess(userid, emojiId)
 
 	if resultVar0 != nil {
 		span.LogFields(spanlog.Error(resultVar0))

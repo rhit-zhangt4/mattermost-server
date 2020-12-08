@@ -457,6 +457,62 @@ func TestSaveEmoji(t *testing.T) {
 
 }
 
+func TestDeleteEmojiAccess(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+	Client := th.Client
+
+	EnableCustomEmoji := *th.App.Config().ServiceSettings.EnableCustomEmoji
+	defer func() {
+		th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = EnableCustomEmoji })
+	}()
+	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableCustomEmoji = true })
+	defaultRolePermissions := th.SaveDefaultRolePermissions()
+	defer func() {
+		th.RestoreDefaultRolePermissions(defaultRolePermissions)
+	}()
+	emoji := &model.Emoji{
+		CreatorId: th.BasicUser.Id,
+		Name:      model.NewId(),
+	}
+	newEmoji, resp := Client.CreatePrivateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+	CheckNoError(t, resp)
+
+	// _, resp = Client.SavePrivateEmoji(emoji.Id, th.BasicUser2.Id)
+	// CheckNoError(t, resp)
+
+	_, resp = Client.DeletePrivateEmojiAccess(newEmoji.Id)
+	CheckNoError(t, resp)
+
+	ok, _ := Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser.Id)
+	require.Equal(t, ok, []byte("false"), "did not return false")
+
+	_, resp = Client.SavePrivateEmoji(newEmoji.Id, th.BasicUser.Id)
+	CheckNoError(t, resp)
+
+	_, resp = Client.SavePrivateEmoji(newEmoji.Id, th.BasicUser2.Id)
+	CheckNoError(t, resp)
+
+	_, resp = Client.DeleteEmojiWithAccess(newEmoji.Id)
+	CheckNoError(t, resp)
+
+	ok, _ = Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser.Id)
+	require.Equal(t, ok, []byte("false"), "did not return false")
+
+	ok, _ = Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser2.Id)
+	require.Equal(t, ok, []byte("false"), "did not return false")
+
+	newEmoji, resp = Client.CreateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+	CheckNoError(t, resp)
+
+	_, resp = Client.DeleteEmojiWithAccess(newEmoji.Id)
+	CheckNoError(t, resp)
+
+	listEmoji, _ := Client.GetEmojiList(0, 100)
+	require.Len(t, listEmoji, 0, "should only return 0")
+
+}
+
 func TestDeleteEmoji(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()

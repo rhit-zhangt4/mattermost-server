@@ -2887,6 +2887,42 @@ func (s *OpenTracingLayerEmojiStore) Search(name string, prefixOnly bool, limit 
 	return result, err
 }
 
+func (s *OpenTracingLayerEmojiAccessStore) DeleteAccessByEmojiId(emojiId string) error {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "EmojiAccessStore.DeleteAccessByEmojiId")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	err := s.EmojiAccessStore.DeleteAccessByEmojiId(emojiId)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return err
+}
+
+func (s *OpenTracingLayerEmojiAccessStore) DeleteAccessByUserIdAndEmojiId(userId string, emojiId string) error {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "EmojiAccessStore.DeleteAccessByUserIdAndEmojiId")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	err := s.EmojiAccessStore.DeleteAccessByUserIdAndEmojiId(userId, emojiId)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return err
+}
+
 func (s *OpenTracingLayerEmojiAccessStore) GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error) {
 	origCtx := s.Root.Store.Context()
 	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "EmojiAccessStore.GetByUserIdAndEmojiId")
@@ -5593,6 +5629,24 @@ func (s *OpenTracingLayerPreferenceStore) Save(preferences *model.Preferences) e
 
 	defer span.Finish()
 	err := s.PreferenceStore.Save(preferences)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return err
+}
+
+func (s *OpenTracingLayerPublicEmojiStore) DeleteAccessByEmojiId(emojiId string) error {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "PublicEmojiStore.DeleteAccessByEmojiId")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	err := s.PublicEmojiStore.DeleteAccessByEmojiId(emojiId)
 	if err != nil {
 		span.LogFields(spanlog.Error(err))
 		ext.Error.Set(span, true)
