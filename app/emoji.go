@@ -277,25 +277,11 @@ func (a *App) DeletePrivateEmojiAccess(userid string, emojiId string) *model.App
 }
 
 func (a *App) DeleteEmojiWithAccess(userid string, emoji *model.Emoji) *model.AppError {
-	isPublic := false
-	list, err := a.Srv().Store.PublicEmoji().GetAllPublicEmojis()
-	if err != nil {
-		return model.NewAppError("GetEmojiList", "app.emoji.get_list.internal_error", nil, err.Error(), http.StatusInternalServerError)
+	if err := a.Srv().Store.PublicEmoji().DeleteAccessByEmojiId(emoji.Id); err != nil {
+		return model.NewAppError("DeleteEmoji", "app.emoji.delete.app_error", nil, "id="+emoji.Id+", err="+err.Error(), http.StatusInternalServerError)
 	}
-	for _, v := range list {
-		if v.EmojiId == emoji.Id {
-			isPublic = true
-			break
-		}
-	}
-	if isPublic {
-		if err := a.Srv().Store.PublicEmoji().DeleteAccessByEmojiId(emoji.Id); err != nil {
-			return model.NewAppError("DeleteEmoji", "app.emoji.delete.app_error", nil, "id="+emoji.Id+", err="+err.Error(), http.StatusInternalServerError)
-		}
-	} else {
-		if err := a.Srv().Store.EmojiAccess().DeleteAccessByEmojiId(emoji.Id); err != nil {
-			return model.NewAppError("DeleteEmoji", "app.emoji.delete.app_error", nil, "id="+emoji.Id+", err="+err.Error(), http.StatusInternalServerError)
-		}
+	if err := a.Srv().Store.EmojiAccess().DeleteAccessByEmojiId(emoji.Id); err != nil {
+		return model.NewAppError("DeleteEmoji", "app.emoji.delete.app_error", nil, "id="+emoji.Id+", err="+err.Error(), http.StatusInternalServerError)
 	}
 	if err := a.Srv().Store.Emoji().Delete(emoji, model.GetMillis()); err != nil {
 		var nfErr *store.ErrNotFound
