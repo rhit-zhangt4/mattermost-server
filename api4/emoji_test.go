@@ -413,13 +413,26 @@ func TestCanAccessEmoji(t *testing.T) {
 		CreatorId: th.BasicUser.Id,
 		Name:      model.NewId(),
 	}
+	emojiPublic := &model.Emoji{
+		CreatorId: th.BasicUser.Id,
+		Name:      model.NewId(),
+	}
 	newEmoji, resp := Client.CreatePrivateEmoji(emoji, utils.CreateTestGif(t, 10, 10), "image.gif")
+	CheckNoError(t, resp)
+	newPublicEmoji, resp := Client.CreateEmoji(emojiPublic, utils.CreateTestGif(t, 10, 10), "image.gif")
 	CheckNoError(t, resp)
 
 	ok, resp := Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser.Id)
 	CheckNoError(t, resp)
 	require.Equal(t, ok, []byte("true"), "did not return true")
 	// require.True(t, ok, "delete did not return OK")
+
+	listEmoji, _ := Client.GetPublicEmojiList(0, 100)
+	require.Len(t, listEmoji, 1, "should only return 0")
+
+	ok, resp = Client.GetCanAccessPrivateEmojiImage(newPublicEmoji.Id, th.BasicUser.Id)
+	CheckNoError(t, resp)
+	require.Equal(t, ok, []byte("true"), "did not return true")
 
 }
 
@@ -484,6 +497,12 @@ func TestDeleteEmojiAccess(t *testing.T) {
 	_, resp = Client.DeletePrivateEmojiAccess(newEmoji.Id)
 	CheckNoError(t, resp)
 
+	listEmoji, _ := Client.GetPublicEmojiList(0, 100)
+	require.Len(t, listEmoji, 0, "should only return 0")
+
+	listEmoji, _ = Client.GetPrivateEmojiList(0, 100)
+	require.Len(t, listEmoji, 0, "should only return 0")
+
 	ok, _ := Client.GetCanAccessPrivateEmojiImage(newEmoji.Id, th.BasicUser.Id)
 	require.Equal(t, ok, []byte("false"), "did not return false")
 
@@ -508,7 +527,7 @@ func TestDeleteEmojiAccess(t *testing.T) {
 	_, resp = Client.DeleteEmojiWithAccess(newEmoji.Id)
 	CheckNoError(t, resp)
 
-	listEmoji, _ := Client.GetEmojiList(0, 100)
+	listEmoji, _ = Client.GetEmojiList(0, 100)
 	require.Len(t, listEmoji, 0, "should only return 0")
 
 }

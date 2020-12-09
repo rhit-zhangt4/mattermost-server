@@ -543,6 +543,7 @@ type PublicEmojiStore interface {
 	Save(public_emoji *model.PublicEmoji) (*model.PublicEmoji, error)
 	GetAllPublicEmojis() ([]*model.PublicEmoji, error)
 	DeleteAccessByEmojiId(emojiId string) error
+	CheckIsPublicEmojis(emojiId string) bool
 }
 
 type StatusStore interface {

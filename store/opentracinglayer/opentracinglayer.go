@@ -5637,6 +5637,19 @@ func (s *OpenTracingLayerPreferenceStore) Save(preferences *model.Preferences) e
 	return err
 }
 
+func (s *OpenTracingLayerPublicEmojiStore) CheckIsPublicEmojis(emojiId string) bool {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "PublicEmojiStore.CheckIsPublicEmojis")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result := s.PublicEmojiStore.CheckIsPublicEmojis(emojiId)
+	return result
+}
+
 func (s *OpenTracingLayerPublicEmojiStore) DeleteAccessByEmojiId(emojiId string) error {
 	origCtx := s.Root.Store.Context()
 	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "PublicEmojiStore.DeleteAccessByEmojiId")

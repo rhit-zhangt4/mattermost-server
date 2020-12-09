@@ -4186,6 +4186,12 @@ func (s *RetryLayerPreferenceStore) Save(preferences *model.Preferences) error {
 
 }
 
+func (s *RetryLayerPublicEmojiStore) CheckIsPublicEmojis(emojiId string) bool {
+
+	return s.PublicEmojiStore.CheckIsPublicEmojis(emojiId)
+
+}
+
 func (s *RetryLayerPublicEmojiStore) DeleteAccessByEmojiId(emojiId string) error {
 
 	tries := 0

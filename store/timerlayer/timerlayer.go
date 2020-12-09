@@ -5105,6 +5105,22 @@ func (s *TimerLayerPreferenceStore) Save(preferences *model.Preferences) error {
 	return err
 }
 
+func (s *TimerLayerPublicEmojiStore) CheckIsPublicEmojis(emojiId string) bool {
+	start := timemodule.Now()
+
+	result := s.PublicEmojiStore.CheckIsPublicEmojis(emojiId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if true {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("PublicEmojiStore.CheckIsPublicEmojis", success, elapsed)
+	}
+	return result
+}
+
 func (s *TimerLayerPublicEmojiStore) DeleteAccessByEmojiId(emojiId string) error {
 	start := timemodule.Now()
 

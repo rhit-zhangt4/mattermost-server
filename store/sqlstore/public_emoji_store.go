@@ -57,6 +57,22 @@ func (es SqlPublicEmojiStore) GetAllPublicEmojis() ([]*model.PublicEmoji, error)
 	return publicEmojies, nil
 }
 
+func (es SqlPublicEmojiStore) CheckIsPublicEmojis(emojiId string) bool {
+
+	count, err := es.GetReplica().SelectInt(`
+		SELECT count(*)
+			FROM PublicEmoji
+		WHERE
+			EmojiId = :EmojiId
+			`, map[string]interface{}{"EmojiId": emojiId})
+
+	if err != nil || count == 0 {
+		return false
+	}
+
+	return true
+}
+
 func (es SqlPublicEmojiStore) DeleteAccessByEmojiId(emojiId string) error {
 	sql := `DELETE
 		FROM PublicEmoji

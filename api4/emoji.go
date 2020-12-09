@@ -128,27 +128,27 @@ func createPrivateEmoji(c *Context, w http.ResponseWriter, r *http.Request) {
 	auditRec := c.MakeAuditRecord("createEmoji", audit.Fail)
 	defer c.LogAuditRec(auditRec)
 
-	// Allow any user with CREATE_EMOJIS permission at Team level to create emojis at system level
-	memberships, err := c.App.GetTeamMembersForUser(c.App.Session().UserId)
+	// // Allow any user with CREATE_EMOJIS permission at Team level to create emojis at system level
+	// memberships, err := c.App.GetTeamMembersForUser(c.App.Session().UserId)
 
-	if err != nil {
-		c.Err = err
-		return
-	}
+	// if err != nil {
+	// 	c.Err = err
+	// 	return
+	// }
 
-	if !c.App.SessionHasPermissionTo(*c.App.Session(), model.PERMISSION_CREATE_EMOJIS) {
-		hasPermission := false
-		for _, membership := range memberships {
-			if c.App.SessionHasPermissionToTeam(*c.App.Session(), membership.TeamId, model.PERMISSION_CREATE_EMOJIS) {
-				hasPermission = true
-				break
-			}
-		}
-		if !hasPermission {
-			c.SetPermissionError(model.PERMISSION_CREATE_EMOJIS)
-			return
-		}
-	}
+	// if !c.App.SessionHasPermissionTo(*c.App.Session(), model.PERMISSION_CREATE_EMOJIS) {
+	// 	hasPermission := false
+	// 	for _, membership := range memberships {
+	// 		if c.App.SessionHasPermissionToTeam(*c.App.Session(), membership.TeamId, model.PERMISSION_CREATE_EMOJIS) {
+	// 			hasPermission = true
+	// 			break
+	// 		}
+	// 	}
+	// 	if !hasPermission {
+	// 		c.SetPermissionError(model.PERMISSION_CREATE_EMOJIS)
+	// 		return
+	// 	}
+	// }
 
 	m := r.MultipartForm
 	props := m.Value
