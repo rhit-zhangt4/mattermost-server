@@ -15,14 +15,14 @@ type PublicEmojiStore struct {
 }
 
 // CheckIsPublicEmojis provides a mock function with given fields: emojiId
-func (_m *PublicEmojiStore) CheckIsPublicEmojis(emojiId string) error {
+func (_m *PublicEmojiStore) CheckIsPublicEmojis(emojiId string) bool {
 	ret := _m.Called(emojiId)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
 		r0 = rf(emojiId)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(bool)
 	}
 
 	return r0

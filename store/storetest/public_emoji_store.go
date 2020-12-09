@@ -26,10 +26,24 @@ func testPublicEmojiGetAllPublicEmoji(t *testing.T, ss store.Store) {
 	public_emoji := &model.PublicEmoji{
 		EmojiId: testEmojiId,
 	}
+
+	result := ss.PublicEmoji().CheckIsPublicEmojis(testEmojiId)
+	require.False(t, result)
+
 	_, err = ss.PublicEmoji().Save(public_emoji)
 	require.Nil(t, err)
 
 	r, err := ss.PublicEmoji().GetAllPublicEmojis()
 	require.Nil(t, err)
 	assert.Len(t, r, 1, "should return one element")
+
+	result = ss.PublicEmoji().CheckIsPublicEmojis(testEmojiId)
+	require.True(t, result)
+
+	err = ss.PublicEmoji().DeleteAccessByEmojiId(testEmojiId)
+	require.Nil(t, err)
+
+	result = ss.PublicEmoji().CheckIsPublicEmojis(testEmojiId)
+	require.False(t, result)
+
 }

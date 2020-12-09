@@ -4186,23 +4186,9 @@ func (s *RetryLayerPreferenceStore) Save(preferences *model.Preferences) error {
 
 }
 
-func (s *RetryLayerPublicEmojiStore) CheckIsPublicEmojis(emojiId string) error {
+func (s *RetryLayerPublicEmojiStore) CheckIsPublicEmojis(emojiId string) bool {
 
-	tries := 0
-	for {
-		err := s.PublicEmojiStore.CheckIsPublicEmojis(emojiId)
-		if err == nil {
-			return nil
-		}
-		if !isRepeatableError(err) {
-			return err
-		}
-		tries++
-		if tries >= 3 {
-			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
-			return err
-		}
-	}
+	return s.PublicEmojiStore.CheckIsPublicEmojis(emojiId)
 
 }
 
