@@ -398,10 +398,15 @@ func (a *App) GetEmojiImage(emojiId string) ([]byte, string, *model.AppError) {
 	return img, imageType, nil
 }
 func (a *App) GetCanAccessPrivateEmojiImage(emojiId string, userId string) *model.AppError {
-	_, accessErr := a.Srv().Store.EmojiAccess().GetByUserIdAndEmojiId(userId, emojiId)
-	if accessErr != nil {
-		return model.NewAppError("getEmojiImage", "api.emoji.get_image.read.app_error", nil, accessErr.Error(), http.StatusNotFound)
+	isPublic := a.Srv().Store.PublicEmoji().CheckIsPublicEmojis(emojiId)
+	//fmt.Println(err)
+	if !isPublic {
+		_, accessErr := a.Srv().Store.EmojiAccess().GetByUserIdAndEmojiId(userId, emojiId)
+		if accessErr != nil {
+			return model.NewAppError("getEmojiImage", "api.emoji.get_image.read.app_error", nil, accessErr.Error(), http.StatusNotFound)
+		}
 	}
+
 	return nil
 }
 
