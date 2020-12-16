@@ -13,7 +13,7 @@ import (
 func TestExtRefStore(t *testing.T, ss store.Store) {
 	// t.Run("EmojiAccessSave", func(t *testing.T) { testEmojiAccessSave(t, ss) })
 	// t.Run("SavePrivateEmoji", func(t *testing.T) { testSavePrivateEmoji(t, ss) })
-	t.Run("EmojiAccessGetByUserIdAndEmojiId", func(t *testing.T) { testEmojiAccessGetByUserIdAndEmojiId(t, ss) })
+	// t.Run("EmojiAccessGetByUserIdAndEmojiId", func(t *testing.T) { testEmojiAccessGetByUserIdAndEmojiId(t, ss) })
 	// t.Run("EmojiAccessGetMultipleByUserId", func(t *testing.T) { testGetMultipleByUserId(t, ss) })
 	// t.Run("DeleteEmojiAccessGetByUserIdAndEmojiId", func(t *testing.T) { testDeleteEmojiAccessGetByUserIdAndEmojiId(t, ss) })
 	// t.Run("SavePrivateEmoji", func(t *testing.T) { testSavePrivateEmoji(t, ss) })
