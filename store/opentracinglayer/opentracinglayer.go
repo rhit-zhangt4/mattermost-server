@@ -28,6 +28,7 @@ type OpenTracingLayer struct {
 	ComplianceStore           store.ComplianceStore
 	EmojiStore                store.EmojiStore
 	EmojiAccessStore          store.EmojiAccessStore
+	ExtRefStore               store.ExtRefStore
 	FileInfoStore             store.FileInfoStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
@@ -91,6 +92,10 @@ func (s *OpenTracingLayer) Emoji() store.EmojiStore {
 
 func (s *OpenTracingLayer) EmojiAccess() store.EmojiAccessStore {
 	return s.EmojiAccessStore
+}
+
+func (s *OpenTracingLayer) ExtRef() store.ExtRefStore {
+	return s.ExtRefStore
 }
 
 func (s *OpenTracingLayer) FileInfo() store.FileInfoStore {
@@ -232,6 +237,11 @@ type OpenTracingLayerEmojiStore struct {
 
 type OpenTracingLayerEmojiAccessStore struct {
 	store.EmojiAccessStore
+	Root *OpenTracingLayer
+}
+
+type OpenTracingLayerExtRefStore struct {
+	store.ExtRefStore
 	Root *OpenTracingLayer
 }
 
@@ -9654,6 +9664,7 @@ func New(childStore store.Store, ctx context.Context) *OpenTracingLayer {
 	newStore.ComplianceStore = &OpenTracingLayerComplianceStore{ComplianceStore: childStore.Compliance(), Root: &newStore}
 	newStore.EmojiStore = &OpenTracingLayerEmojiStore{EmojiStore: childStore.Emoji(), Root: &newStore}
 	newStore.EmojiAccessStore = &OpenTracingLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
+	newStore.ExtRefStore = &OpenTracingLayerExtRefStore{ExtRefStore: childStore.ExtRef(), Root: &newStore}
 	newStore.FileInfoStore = &OpenTracingLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
 	newStore.GroupStore = &OpenTracingLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &OpenTracingLayerJobStore{JobStore: childStore.Job(), Root: &newStore}

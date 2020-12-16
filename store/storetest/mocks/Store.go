@@ -222,6 +222,22 @@ func (_m *Store) EmojiAccess() store.EmojiAccessStore {
 	return r0
 }
 
+// ExtRef provides a mock function with given fields:
+func (_m *Store) ExtRef() store.ExtRefStore {
+	ret := _m.Called()
+
+	var r0 store.ExtRefStore
+	if rf, ok := ret.Get(0).(func() store.ExtRefStore); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(store.ExtRefStore)
+		}
+	}
+
+	return r0
+}
+
 // FileInfo provides a mock function with given fields:
 func (_m *Store) FileInfo() store.FileInfoStore {
 	ret := _m.Called()
