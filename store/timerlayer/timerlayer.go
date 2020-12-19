@@ -28,6 +28,7 @@ type TimerLayer struct {
 	ComplianceStore           store.ComplianceStore
 	EmojiStore                store.EmojiStore
 	EmojiAccessStore          store.EmojiAccessStore
+	ExtRefStore               store.ExtRefStore
 	FileInfoStore             store.FileInfoStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
@@ -91,6 +92,10 @@ func (s *TimerLayer) Emoji() store.EmojiStore {
 
 func (s *TimerLayer) EmojiAccess() store.EmojiAccessStore {
 	return s.EmojiAccessStore
+}
+
+func (s *TimerLayer) ExtRef() store.ExtRefStore {
+	return s.ExtRefStore
 }
 
 func (s *TimerLayer) FileInfo() store.FileInfoStore {
@@ -232,6 +237,11 @@ type TimerLayerEmojiStore struct {
 
 type TimerLayerEmojiAccessStore struct {
 	store.EmojiAccessStore
+	Root *TimerLayer
+}
+
+type TimerLayerExtRefStore struct {
+	store.ExtRefStore
 	Root *TimerLayer
 }
 
@@ -8735,6 +8745,7 @@ func New(childStore store.Store, metrics einterfaces.MetricsInterface) *TimerLay
 	newStore.ComplianceStore = &TimerLayerComplianceStore{ComplianceStore: childStore.Compliance(), Root: &newStore}
 	newStore.EmojiStore = &TimerLayerEmojiStore{EmojiStore: childStore.Emoji(), Root: &newStore}
 	newStore.EmojiAccessStore = &TimerLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
+	newStore.ExtRefStore = &TimerLayerExtRefStore{ExtRefStore: childStore.ExtRef(), Root: &newStore}
 	newStore.FileInfoStore = &TimerLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
 	newStore.GroupStore = &TimerLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &TimerLayerJobStore{JobStore: childStore.Job(), Root: &newStore}

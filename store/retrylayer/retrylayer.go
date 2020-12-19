@@ -30,6 +30,7 @@ type RetryLayer struct {
 	ComplianceStore           store.ComplianceStore
 	EmojiStore                store.EmojiStore
 	EmojiAccessStore          store.EmojiAccessStore
+	ExtRefStore               store.ExtRefStore
 	FileInfoStore             store.FileInfoStore
 	GroupStore                store.GroupStore
 	JobStore                  store.JobStore
@@ -93,6 +94,10 @@ func (s *RetryLayer) Emoji() store.EmojiStore {
 
 func (s *RetryLayer) EmojiAccess() store.EmojiAccessStore {
 	return s.EmojiAccessStore
+}
+
+func (s *RetryLayer) ExtRef() store.ExtRefStore {
+	return s.ExtRefStore
 }
 
 func (s *RetryLayer) FileInfo() store.FileInfoStore {
@@ -234,6 +239,11 @@ type RetryLayerEmojiStore struct {
 
 type RetryLayerEmojiAccessStore struct {
 	store.EmojiAccessStore
+	Root *RetryLayer
+}
+
+type RetryLayerExtRefStore struct {
+	store.ExtRefStore
 	Root *RetryLayer
 }
 
@@ -7013,6 +7023,7 @@ func New(childStore store.Store) *RetryLayer {
 	newStore.ComplianceStore = &RetryLayerComplianceStore{ComplianceStore: childStore.Compliance(), Root: &newStore}
 	newStore.EmojiStore = &RetryLayerEmojiStore{EmojiStore: childStore.Emoji(), Root: &newStore}
 	newStore.EmojiAccessStore = &RetryLayerEmojiAccessStore{EmojiAccessStore: childStore.EmojiAccess(), Root: &newStore}
+	newStore.ExtRefStore = &RetryLayerExtRefStore{ExtRefStore: childStore.ExtRef(), Root: &newStore}
 	newStore.FileInfoStore = &RetryLayerFileInfoStore{FileInfoStore: childStore.FileInfo(), Root: &newStore}
 	newStore.GroupStore = &RetryLayerGroupStore{GroupStore: childStore.Group(), Root: &newStore}
 	newStore.JobStore = &RetryLayerJobStore{JobStore: childStore.Job(), Root: &newStore}

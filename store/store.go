@@ -21,6 +21,7 @@ type StoreResult struct {
 }
 
 type Store interface {
+	ExtRef() ExtRefStore
 	Team() TeamStore
 	Channel() ChannelStore
 	Post() PostStore
@@ -68,6 +69,9 @@ type Store interface {
 	CheckIntegrity() <-chan model.IntegrityCheckResult
 	SetContext(context context.Context)
 	Context() context.Context
+}
+
+type ExtRefStore interface {
 }
 
 type TeamStore interface {
@@ -528,15 +532,10 @@ type EmojiStore interface {
 
 type EmojiAccessStore interface {
 	Save(emoji_access *model.EmojiAccess) (*model.EmojiAccess, error)
-	// Get(id string, allowFromCache bool) (*model.Emoji, error)
-	// GetByName(name string, allowFromCache bool) (*model.Emoji, error)
 	GetByUserIdAndEmojiId(userId string, emojiId string) (*model.EmojiAccess, error)
 	GetMultipleByUserId(ids []string) ([]*model.EmojiAccess, error)
 	DeleteAccessByUserIdAndEmojiId(userId string, emojiId string) error
 	DeleteAccessByEmojiId(emojiId string) error
-	// GetList(offset, limit int, sort string) ([]*model.Emoji, error)
-	// Delete(emoji *model.Emoji, time int64) error
-	// Search(name string, prefixOnly bool, limit int) ([]*model.Emoji, error)
 }
 
 type PublicEmojiStore interface {
