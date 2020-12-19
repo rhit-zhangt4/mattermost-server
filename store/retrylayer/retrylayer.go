@@ -2280,6 +2280,126 @@ func (s *RetryLayerEmojiAccessStore) Save(emoji_access *model.EmojiAccess) (*mod
 
 }
 
+func (s *RetryLayerExtRefStore) GetByAliasUserId(aliasUserId string) (*model.ExtRef, error) {
+
+	tries := 0
+	for {
+		result, err := s.ExtRefStore.GetByAliasUserId(aliasUserId)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerExtRefStore) GetByExtIdAndPlatform(externalId string, externalPlatform string) (*model.ExtRef, error) {
+
+	tries := 0
+	for {
+		result, err := s.ExtRefStore.GetByExtIdAndPlatform(externalId, externalPlatform)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerExtRefStore) GetByRealUserIdAndPlatform(realUserId string, externalPlatform string) (*model.ExtRef, error) {
+
+	tries := 0
+	for {
+		result, err := s.ExtRefStore.GetByRealUserIdAndPlatform(realUserId, externalPlatform)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerExtRefStore) Save(ext_ref *model.ExtRef) (*model.ExtRef, error) {
+
+	tries := 0
+	for {
+		result, err := s.ExtRefStore.Save(ext_ref)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
+func (s *RetryLayerExtRefStore) Unlink(externalId string, externalPlatform string) error {
+
+	tries := 0
+	for {
+		err := s.ExtRefStore.Unlink(externalId, externalPlatform)
+		if err == nil {
+			return nil
+		}
+		if !isRepeatableError(err) {
+			return err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return err
+		}
+	}
+
+}
+
+func (s *RetryLayerExtRefStore) UpdateRealId(realUserId string, externalId string, externalPlatform string) error {
+
+	tries := 0
+	for {
+		err := s.ExtRefStore.UpdateRealId(realUserId, externalId, externalPlatform)
+		if err == nil {
+			return nil
+		}
+		if !isRepeatableError(err) {
+			return err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return err
+		}
+	}
+
+}
+
 func (s *RetryLayerFileInfoStore) AttachToPost(fileId string, postId string, creatorId string) error {
 
 	tries := 0
