@@ -106,13 +106,13 @@ func (_m *ExtRefStore) Save(ext_ref *model.ExtRef) (*model.ExtRef, error) {
 	return r0, r1
 }
 
-// Unlink provides a mock function with given fields: externalId, externalPlatform
-func (_m *ExtRefStore) Unlink(externalId string, externalPlatform string) error {
-	ret := _m.Called(externalId, externalPlatform)
+// Unlink provides a mock function with given fields: realUserId, externalPlatform
+func (_m *ExtRefStore) Unlink(realUserId string, externalPlatform string) error {
+	ret := _m.Called(realUserId, externalPlatform)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string) error); ok {
-		r0 = rf(externalId, externalPlatform)
+		r0 = rf(realUserId, externalPlatform)
 	} else {
 		r0 = ret.Error(0)
 	}

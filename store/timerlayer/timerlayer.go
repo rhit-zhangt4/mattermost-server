@@ -2799,10 +2799,10 @@ func (s *TimerLayerExtRefStore) Save(ext_ref *model.ExtRef) (*model.ExtRef, erro
 	return result, err
 }
 
-func (s *TimerLayerExtRefStore) Unlink(externalId string, externalPlatform string) error {
+func (s *TimerLayerExtRefStore) Unlink(realUserId string, externalPlatform string) error {
 	start := timemodule.Now()
 
-	err := s.ExtRefStore.Unlink(externalId, externalPlatform)
+	err := s.ExtRefStore.Unlink(realUserId, externalPlatform)
 
 	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
 	if s.Root.Metrics != nil {
