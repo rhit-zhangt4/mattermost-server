@@ -72,6 +72,12 @@ type Store interface {
 }
 
 type ExtRefStore interface {
+	GetByExtIdAndPlatform(externalId string, externalPlatform string) (*model.ExtRef, error)
+	GetByRealUserIdAndPlatform(realUserId string, externalPlatform string) (*model.ExtRef, error)
+	UpdateRealId(realUserId string, externalId string, externalPlatform string) error
+	Unlink(externalId string, externalPlatform string) error
+	Save(ext_ref *model.ExtRef) (*model.ExtRef, error)
+	GetByAliasUserId(aliasUserId string) (*model.ExtRef, error)
 }
 
 type TeamStore interface {
