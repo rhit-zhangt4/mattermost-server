@@ -64,6 +64,11 @@ func (a *App) AuthenticateUserForLogin(id, loginId, password, mfaToken string, l
 			return nil, err
 		}
 
+		// Unless the user is an alias
+		if err = checkUserNotAlias(user); err != nil {
+			return nil, err
+		}
+
 		return user, nil
 	}
 

@@ -96,6 +96,7 @@ type User struct {
 	BotLastIconUpdate      int64     `db:"-" json:"bot_last_icon_update,omitempty"`
 	TermsOfServiceId       string    `db:"-" json:"terms_of_service_id,omitempty"`
 	TermsOfServiceCreateAt int64     `db:"-" json:"terms_of_service_create_at,omitempty"`
+	IsAlias                bool      `db:"-" json:"is_alias,omitempty"`
 }
 
 type UserUpdate struct {
@@ -176,6 +177,17 @@ func (u UserSlice) FilterWithoutBots() UserSlice {
 
 	for _, user := range u {
 		if !user.IsBot {
+			matches = append(matches, user)
+		}
+	}
+	return UserSlice(matches)
+}
+
+func (u UserSlice) FilterWithoutAlias() UserSlice {
+	var matches []*User
+
+	for _, user := range u {
+		if !user.IsAlias {
 			matches = append(matches, user)
 		}
 	}

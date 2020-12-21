@@ -601,6 +601,10 @@ func (a *App) LoginByOAuth(service string, userData io.Reader, teamId string) (*
 			return nil, model.NewAppError("loginByOAuth", "api.user.login_by_oauth.bot_login_forbidden.app_error", nil, "", http.StatusForbidden)
 		}
 
+		if user.IsAlias {
+			return nil, model.NewAppError("loginByOAuth", "api.user.login_by_oauth.alias_login_forbidden.app_error", nil, "", http.StatusForbidden)
+		}
+
 		if err = a.UpdateOAuthUserAttrs(bytes.NewReader(buf.Bytes()), user, provider, service); err != nil {
 			return nil, err
 		}

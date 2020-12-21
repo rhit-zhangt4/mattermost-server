@@ -469,6 +469,7 @@ func (a *App) filterOutOfChannelMentions(sender *model.User, post *model.Post, c
 	// Filter out inactive users and bots
 	allUsers := model.UserSlice(users).FilterByActive(true)
 	allUsers = allUsers.FilterWithoutBots()
+	allUsers = allUsers.FilterWithoutAlias()
 	allUsers, err = a.FilterUsersByVisible(sender, allUsers)
 	if err != nil {
 		return nil, nil, err
