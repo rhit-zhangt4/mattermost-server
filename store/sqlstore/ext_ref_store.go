@@ -41,6 +41,54 @@ func (es SqlExtRefStore) createIndexesIfNotExists() {
 	es.CreateIndexIfNotExists("idx_ext_ref_external", "ExtRef", "ExternalId")
 }
 
+func (es SqlExtRefStore) GetByAliasUserId(aliasUserId string) (*model.ExtRef, error) {
+	var ext_ref *model.ExtRef
+
+	err := es.GetReplica().SelectOne(&ext_ref,
+		`SELECT
+			*
+		FROM
+			ExtRef
+		WHERE
+			AliasUserId = :Key1
+			`, map[string]string{"Key1": aliasUserId})
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.NewErrNotFound("ExtRef", fmt.Sprintf("aliasUserId=%s", aliasUserId))
+		}
+
+		return nil, errors.Wrapf(err, "could not get ext ref with aliasUserId=%s", aliasUserId)
+	}
+
+	return ext_ref, nil
+
+}
+
+func (es SqlExtRefStore) GetByExtIdAndPlatform(externalId string, externalPlatform string) (*model.ExtRef, error) {
+	var ext_ref *model.ExtRef
+
+	err := es.GetReplica().SelectOne(&ext_ref,
+		`SELECT
+			*
+		FROM
+			ExtRef
+		WHERE
+			ExternalId = :Key1
+			AND ExternalPlatform = :Key2`, map[string]string{"Key1": externalId, "Key2": externalPlatform})
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.NewErrNotFound("ExtRef", fmt.Sprintf("externalId=%s, platform=%s", externalId, externalPlatform))
+		}
+
+		return nil, errors.Wrapf(err, "could not get ext ref with externalId=%s, platform=%s", externalId, externalPlatform)
+	}
+
+	return ext_ref, nil
+
+}
+
 func (es SqlExtRefStore) GetByRealUserIdAndPlatform(realUserId string, externalPlatform string) (*model.ExtRef, error) {
 	var ext_ref *model.ExtRef
 
@@ -62,6 +110,40 @@ func (es SqlExtRefStore) GetByRealUserIdAndPlatform(realUserId string, externalP
 	}
 
 	return ext_ref, nil
+}
+
+func (es SqlExtRefStore) UpdateRealId(realUserId string, externalId string, externalPlatform string) error {
+	if sqlResult, err := es.GetMaster().Exec(
+		`UPDATE
+			ExtRef
+		SET
+			RealUserId = :realUserId
+		WHERE
+			ExternalId = :externalId
+			AND ExternalPlatform = :externalPlatform`, map[string]interface{}{"realUserId": realUserId, "externalId": externalId, "externalPlatform": externalPlatform}); err != nil {
+		return errors.Wrap(err, "could not update realUserId")
+	} else if rows, _ := sqlResult.RowsAffected(); rows == 0 {
+		return store.NewErrNotFound("ExtRef", externalId)
+	}
+	return nil
+}
+
+func (es SqlExtRefStore) Unlink(externalId string, externalPlatform string) error {
+	sql := `DELETE
+		FROM ExtRef
+	WHERE
+	ExternalId = :externalId
+	AND ExternalPlatform = :externalPlatform`
+
+	queryParams := map[string]string{
+		"externalId":       externalId,
+		"externalPlatform": externalPlatform,
+	}
+	_, err := es.GetMaster().Exec(sql, queryParams)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (es SqlExtRefStore) Save(ext_ref *model.ExtRef) (*model.ExtRef, error) {

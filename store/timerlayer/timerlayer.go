@@ -2735,6 +2735,102 @@ func (s *TimerLayerEmojiAccessStore) Save(emoji_access *model.EmojiAccess) (*mod
 	return result, err
 }
 
+func (s *TimerLayerExtRefStore) GetByAliasUserId(aliasUserId string) (*model.ExtRef, error) {
+	start := timemodule.Now()
+
+	result, err := s.ExtRefStore.GetByAliasUserId(aliasUserId)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("ExtRefStore.GetByAliasUserId", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerExtRefStore) GetByExtIdAndPlatform(externalId string, externalPlatform string) (*model.ExtRef, error) {
+	start := timemodule.Now()
+
+	result, err := s.ExtRefStore.GetByExtIdAndPlatform(externalId, externalPlatform)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("ExtRefStore.GetByExtIdAndPlatform", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerExtRefStore) GetByRealUserIdAndPlatform(realUserId string, externalPlatform string) (*model.ExtRef, error) {
+	start := timemodule.Now()
+
+	result, err := s.ExtRefStore.GetByRealUserIdAndPlatform(realUserId, externalPlatform)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("ExtRefStore.GetByRealUserIdAndPlatform", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerExtRefStore) Save(ext_ref *model.ExtRef) (*model.ExtRef, error) {
+	start := timemodule.Now()
+
+	result, err := s.ExtRefStore.Save(ext_ref)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("ExtRefStore.Save", success, elapsed)
+	}
+	return result, err
+}
+
+func (s *TimerLayerExtRefStore) Unlink(externalId string, externalPlatform string) error {
+	start := timemodule.Now()
+
+	err := s.ExtRefStore.Unlink(externalId, externalPlatform)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("ExtRefStore.Unlink", success, elapsed)
+	}
+	return err
+}
+
+func (s *TimerLayerExtRefStore) UpdateRealId(realUserId string, externalId string, externalPlatform string) error {
+	start := timemodule.Now()
+
+	err := s.ExtRefStore.UpdateRealId(realUserId, externalId, externalPlatform)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("ExtRefStore.UpdateRealId", success, elapsed)
+	}
+	return err
+}
+
 func (s *TimerLayerFileInfoStore) AttachToPost(fileId string, postId string, creatorId string) error {
 	start := timemodule.Now()
 
