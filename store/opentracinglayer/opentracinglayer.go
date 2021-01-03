@@ -3059,7 +3059,7 @@ func (s *OpenTracingLayerExtRefStore) Save(ext_ref *model.ExtRef) (*model.ExtRef
 	return result, err
 }
 
-func (s *OpenTracingLayerExtRefStore) Unlink(externalId string, externalPlatform string) error {
+func (s *OpenTracingLayerExtRefStore) Unlink(realUserId string, externalPlatform string) error {
 	origCtx := s.Root.Store.Context()
 	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "ExtRefStore.Unlink")
 	s.Root.Store.SetContext(newCtx)
@@ -3068,7 +3068,7 @@ func (s *OpenTracingLayerExtRefStore) Unlink(externalId string, externalPlatform
 	}()
 
 	defer span.Finish()
-	err := s.ExtRefStore.Unlink(externalId, externalPlatform)
+	err := s.ExtRefStore.Unlink(realUserId, externalPlatform)
 	if err != nil {
 		span.LogFields(spanlog.Error(err))
 		ext.Error.Set(span, true)

@@ -128,15 +128,15 @@ func (es SqlExtRefStore) UpdateRealId(realUserId string, externalId string, exte
 	return nil
 }
 
-func (es SqlExtRefStore) Unlink(externalId string, externalPlatform string) error {
+func (es SqlExtRefStore) Unlink(realUserId string, externalPlatform string) error {
 	sql := `DELETE
 		FROM ExtRef
 	WHERE
-	ExternalId = :externalId
+	RealUserId = :realUserId
 	AND ExternalPlatform = :externalPlatform`
 
 	queryParams := map[string]string{
-		"externalId":       externalId,
+		"realUserId":       realUserId,
 		"externalPlatform": externalPlatform,
 	}
 	_, err := es.GetMaster().Exec(sql, queryParams)
@@ -157,58 +157,3 @@ func (es SqlExtRefStore) Save(ext_ref *model.ExtRef) (*model.ExtRef, error) {
 
 	return ext_ref, nil
 }
-
-// func (es SqlEmojiAccessStore) GetMultipleByUserId(ids []string) ([]*model.EmojiAccess, error) {
-// 	keys, params := MapStringsToQueryParams(ids, "EmojiAccess")
-
-// 	var emojiAccesses []*model.EmojiAccess
-
-// 	if _, err := es.GetReplica().Select(&emojiAccesses,
-// 		`SELECT
-// 			*
-// 		FROM
-// 			EmojiAccess
-// 		WHERE
-// 			UserId IN `+keys+`
-// 			`, params); err != nil {
-// 		return nil, errors.Wrapf(err, "error getting emoji access by user ids %v", ids)
-// 	}
-// 	return emojiAccesses, nil
-// }
-
-// func (es SqlEmojiAccessStore) DeleteAccessByUserIdAndEmojiId(userId string, emojiId string) error {
-
-// 	sql := `DELETE
-// 		FROM EmojiAccess
-// 	WHERE
-// 	UserId = :UserId
-// 	AND EmojiId = :EmojiId`
-
-// 	queryParams := map[string]string{
-// 		"UserId":  userId,
-// 		"EmojiId": emojiId,
-// 	}
-// 	_, err := es.GetMaster().Exec(sql, queryParams)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func (es SqlEmojiAccessStore) DeleteAccessByEmojiId(emojiId string) error {
-// 	sql := `DELETE
-// 		FROM EmojiAccess
-// 	WHERE
-// 		EmojiId = :EmojiId`
-
-// 	queryParams := map[string]string{
-// 		"EmojiId": emojiId,
-// 	}
-
-// 	_, err := es.GetMaster().Exec(sql, queryParams)
-// 	if err != nil {
-// 		//mlog.Warn("Failed to delete access", mlog.Err(err))
-// 		return err
-// 	}
-// 	return nil
-// }

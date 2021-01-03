@@ -2360,11 +2360,11 @@ func (s *RetryLayerExtRefStore) Save(ext_ref *model.ExtRef) (*model.ExtRef, erro
 
 }
 
-func (s *RetryLayerExtRefStore) Unlink(externalId string, externalPlatform string) error {
+func (s *RetryLayerExtRefStore) Unlink(realUserId string, externalPlatform string) error {
 
 	tries := 0
 	for {
-		err := s.ExtRefStore.Unlink(externalId, externalPlatform)
+		err := s.ExtRefStore.Unlink(realUserId, externalPlatform)
 		if err == nil {
 			return nil
 		}
