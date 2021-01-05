@@ -44,6 +44,7 @@ type RetryLayer struct {
 	ReactionStore             store.ReactionStore
 	RoleStore                 store.RoleStore
 	SchemeStore               store.SchemeStore
+	SecretStore               store.SecretStore
 	SessionStore              store.SessionStore
 	StatusStore               store.StatusStore
 	SystemStore               store.SystemStore
@@ -150,6 +151,10 @@ func (s *RetryLayer) Role() store.RoleStore {
 
 func (s *RetryLayer) Scheme() store.SchemeStore {
 	return s.SchemeStore
+}
+
+func (s *RetryLayer) Secret() store.SecretStore {
+	return s.SecretStore
 }
 
 func (s *RetryLayer) Session() store.SessionStore {
@@ -309,6 +314,11 @@ type RetryLayerRoleStore struct {
 
 type RetryLayerSchemeStore struct {
 	store.SchemeStore
+	Root *RetryLayer
+}
+
+type RetryLayerSecretStore struct {
+	store.SecretStore
 	Root *RetryLayer
 }
 
@@ -4862,6 +4872,26 @@ func (s *RetryLayerSchemeStore) Save(scheme *model.Scheme) (*model.Scheme, error
 
 }
 
+func (s *RetryLayerSecretStore) GetBySecretName(secretName string) (*model.Secret, error) {
+
+	tries := 0
+	for {
+		result, err := s.SecretStore.GetBySecretName(secretName)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+	}
+
+}
+
 func (s *RetryLayerSessionStore) AnalyticsSessionCount() (int64, error) {
 
 	tries := 0
@@ -7157,6 +7187,7 @@ func New(childStore store.Store) *RetryLayer {
 	newStore.ReactionStore = &RetryLayerReactionStore{ReactionStore: childStore.Reaction(), Root: &newStore}
 	newStore.RoleStore = &RetryLayerRoleStore{RoleStore: childStore.Role(), Root: &newStore}
 	newStore.SchemeStore = &RetryLayerSchemeStore{SchemeStore: childStore.Scheme(), Root: &newStore}
+	newStore.SecretStore = &RetryLayerSecretStore{SecretStore: childStore.Secret(), Root: &newStore}
 	newStore.SessionStore = &RetryLayerSessionStore{SessionStore: childStore.Session(), Root: &newStore}
 	newStore.StatusStore = &RetryLayerStatusStore{StatusStore: childStore.Status(), Root: &newStore}
 	newStore.SystemStore = &RetryLayerSystemStore{SystemStore: childStore.System(), Root: &newStore}

@@ -42,6 +42,7 @@ type OpenTracingLayer struct {
 	ReactionStore             store.ReactionStore
 	RoleStore                 store.RoleStore
 	SchemeStore               store.SchemeStore
+	SecretStore               store.SecretStore
 	SessionStore              store.SessionStore
 	StatusStore               store.StatusStore
 	SystemStore               store.SystemStore
@@ -148,6 +149,10 @@ func (s *OpenTracingLayer) Role() store.RoleStore {
 
 func (s *OpenTracingLayer) Scheme() store.SchemeStore {
 	return s.SchemeStore
+}
+
+func (s *OpenTracingLayer) Secret() store.SecretStore {
+	return s.SecretStore
 }
 
 func (s *OpenTracingLayer) Session() store.SessionStore {
@@ -307,6 +312,11 @@ type OpenTracingLayerRoleStore struct {
 
 type OpenTracingLayerSchemeStore struct {
 	store.SchemeStore
+	Root *OpenTracingLayer
+}
+
+type OpenTracingLayerSecretStore struct {
+	store.SecretStore
 	Root *OpenTracingLayer
 }
 
@@ -6254,6 +6264,24 @@ func (s *OpenTracingLayerSchemeStore) Save(scheme *model.Scheme) (*model.Scheme,
 	return result, err
 }
 
+func (s *OpenTracingLayerSecretStore) GetBySecretName(secretName string) (*model.Secret, error) {
+	origCtx := s.Root.Store.Context()
+	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "SecretStore.GetBySecretName")
+	s.Root.Store.SetContext(newCtx)
+	defer func() {
+		s.Root.Store.SetContext(origCtx)
+	}()
+
+	defer span.Finish()
+	result, err := s.SecretStore.GetBySecretName(secretName)
+	if err != nil {
+		span.LogFields(spanlog.Error(err))
+		ext.Error.Set(span, true)
+	}
+
+	return result, err
+}
+
 func (s *OpenTracingLayerSessionStore) AnalyticsSessionCount() (int64, error) {
 	origCtx := s.Root.Store.Context()
 	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "SessionStore.AnalyticsSessionCount")
@@ -9786,6 +9814,7 @@ func New(childStore store.Store, ctx context.Context) *OpenTracingLayer {
 	newStore.ReactionStore = &OpenTracingLayerReactionStore{ReactionStore: childStore.Reaction(), Root: &newStore}
 	newStore.RoleStore = &OpenTracingLayerRoleStore{RoleStore: childStore.Role(), Root: &newStore}
 	newStore.SchemeStore = &OpenTracingLayerSchemeStore{SchemeStore: childStore.Scheme(), Root: &newStore}
+	newStore.SecretStore = &OpenTracingLayerSecretStore{SecretStore: childStore.Secret(), Root: &newStore}
 	newStore.SessionStore = &OpenTracingLayerSessionStore{SessionStore: childStore.Session(), Root: &newStore}
 	newStore.StatusStore = &OpenTracingLayerStatusStore{StatusStore: childStore.Status(), Root: &newStore}
 	newStore.SystemStore = &OpenTracingLayerSystemStore{SystemStore: childStore.System(), Root: &newStore}

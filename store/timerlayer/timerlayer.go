@@ -42,6 +42,7 @@ type TimerLayer struct {
 	ReactionStore             store.ReactionStore
 	RoleStore                 store.RoleStore
 	SchemeStore               store.SchemeStore
+	SecretStore               store.SecretStore
 	SessionStore              store.SessionStore
 	StatusStore               store.StatusStore
 	SystemStore               store.SystemStore
@@ -148,6 +149,10 @@ func (s *TimerLayer) Role() store.RoleStore {
 
 func (s *TimerLayer) Scheme() store.SchemeStore {
 	return s.SchemeStore
+}
+
+func (s *TimerLayer) Secret() store.SecretStore {
+	return s.SecretStore
 }
 
 func (s *TimerLayer) Session() store.SessionStore {
@@ -307,6 +312,11 @@ type TimerLayerRoleStore struct {
 
 type TimerLayerSchemeStore struct {
 	store.SchemeStore
+	Root *TimerLayer
+}
+
+type TimerLayerSecretStore struct {
+	store.SecretStore
 	Root *TimerLayer
 }
 
@@ -5659,6 +5669,22 @@ func (s *TimerLayerSchemeStore) Save(scheme *model.Scheme) (*model.Scheme, error
 	return result, err
 }
 
+func (s *TimerLayerSecretStore) GetBySecretName(secretName string) (*model.Secret, error) {
+	start := timemodule.Now()
+
+	result, err := s.SecretStore.GetBySecretName(secretName)
+
+	elapsed := float64(timemodule.Since(start)) / float64(timemodule.Second)
+	if s.Root.Metrics != nil {
+		success := "false"
+		if err == nil {
+			success = "true"
+		}
+		s.Root.Metrics.ObserveStoreMethodDuration("SecretStore.GetBySecretName", success, elapsed)
+	}
+	return result, err
+}
+
 func (s *TimerLayerSessionStore) AnalyticsSessionCount() (int64, error) {
 	start := timemodule.Now()
 
@@ -8855,6 +8881,7 @@ func New(childStore store.Store, metrics einterfaces.MetricsInterface) *TimerLay
 	newStore.ReactionStore = &TimerLayerReactionStore{ReactionStore: childStore.Reaction(), Root: &newStore}
 	newStore.RoleStore = &TimerLayerRoleStore{RoleStore: childStore.Role(), Root: &newStore}
 	newStore.SchemeStore = &TimerLayerSchemeStore{SchemeStore: childStore.Scheme(), Root: &newStore}
+	newStore.SecretStore = &TimerLayerSecretStore{SecretStore: childStore.Secret(), Root: &newStore}
 	newStore.SessionStore = &TimerLayerSessionStore{SessionStore: childStore.Session(), Root: &newStore}
 	newStore.StatusStore = &TimerLayerStatusStore{StatusStore: childStore.Status(), Root: &newStore}
 	newStore.SystemStore = &TimerLayerSystemStore{SystemStore: childStore.System(), Root: &newStore}
