@@ -55,5 +55,25 @@ func startAuthentication(c *Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func verifyPasscode(c *Context, w http.ResponseWriter, r *http.Request) {
+	adapter, ok := getAdapterFromPlatform(c.Params.ExtChatPlatform)
+	if !ok {
+		//error
+	}
 
+	username := r.URL.Query().Get("username")
+	if username == "" {
+		c.SetInvalidUrlParam("username")
+		return
+	}
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		c.SetInvalidUrlParam("code")
+		return
+	}
+	_, err := adapter.VerifyPasscode(c.App, username, code)
+	if err != nil {
+		//error
+	}
+	ReturnStatusOK(w)
 }

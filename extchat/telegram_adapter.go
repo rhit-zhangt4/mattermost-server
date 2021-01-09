@@ -113,7 +113,27 @@ func (adapter *TelegramAdapter) sendPhoneNumberToAuthorize(client *tdlib.Client,
 }
 
 func (adapter *TelegramAdapter) VerifyPasscode(a app.AppIface, username string, code string) (*model.ExtRef, *model.AppError) {
+	client, err := adapter.getTdClient(a, username)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		currentState, _ := client.Authorize()
+		if currentState.GetAuthorizationStateEnum() == tdlib.AuthorizationStateWaitCodeType {
+			fmt.Println("Sending Code")
+			//fmt.Print("Enter phone: ")
+			//var number string
+			//fmt.Scanln(&number)
+			_, err := client.SendAuthCode(code)
+			if err != nil {
 
+				//error
+				fmt.Printf("Error sending code number: %v", err)
+			}
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	return nil, nil
 }
 
