@@ -75,6 +75,7 @@ endif
 
 	@# Create needed directories
 	mkdir -p $(DIST_PATH)/bin
+	mkdir -p $(DIST_PATH)/temp
 	mkdir -p $(DIST_PATH)/logs
 	mkdir -p $(DIST_PATH)/prepackaged_plugins
 

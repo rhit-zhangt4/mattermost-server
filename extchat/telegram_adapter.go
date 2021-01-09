@@ -5,11 +5,13 @@ package extchat
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Arman92/go-tdlib"
 	"github.com/mattermost/mattermost-server/v5/app"
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/otiai10/copy"
 )
 
 type TelegramAdapter struct {
@@ -128,8 +130,17 @@ func (adapter *TelegramAdapter) getTdClient(a app.AppIface, username string) (*t
 		//error
 		fmt.Printf("ApiHash Err %v", err)
 	}
-	fmt.Println("APIId " + apiId.SecretValue)
-	fmt.Println("APIHash " + apiHash.SecretValue)
+
+	var baseDirectory string
+
+	if _, err := os.Stat("./data/extchat/telegram/" + username); os.IsNotExist(err) {
+		// use temp
+		baseDirectory = "./temp/extchat/telegram/" + username
+	} else {
+		// use data
+		baseDirectory = "./data/extchat/telegram/" + username
+	}
+
 	client := tdlib.NewClient(tdlib.Config{
 		APIID:               apiId.SecretValue,
 		APIHash:             apiHash.SecretValue,
@@ -141,9 +152,18 @@ func (adapter *TelegramAdapter) getTdClient(a app.AppIface, username string) (*t
 		UseFileDatabase:     true,
 		UseChatInfoDatabase: true,
 		UseTestDataCenter:   false,
-		DatabaseDirectory:   "./data/extchat/telegram/" + username + "/tdlib-db",
-		FileDirectory:       "./data/extchat/telegram/" + username + "/tdlib-files",
+		DatabaseDirectory:   baseDirectory + "/tdlib-db",
+		FileDirectory:       baseDirectory + "/tdlib-files",
 		IgnoreFileNames:     false,
 	})
 	return client, nil
+}
+
+func (adapter *TelegramAdapter) copyDataFromTemp(username string) *model.AppError {
+	err := copy.Copy("./temp/extchat/telegram/"+username, "./data/extchat/telegram/"+username)
+	if err != nil {
+		//error
+		return nil
+	}
+	return nil
 }
