@@ -22,6 +22,7 @@ type StoreResult struct {
 
 type Store interface {
 	ExtRef() ExtRefStore
+	Secret() SecretStore
 	Team() TeamStore
 	Channel() ChannelStore
 	Post() PostStore
@@ -78,6 +79,10 @@ type ExtRefStore interface {
 	Unlink(realUserId string, externalPlatform string) error
 	Save(ext_ref *model.ExtRef) (*model.ExtRef, error)
 	GetByAliasUserId(aliasUserId string) (*model.ExtRef, error)
+}
+
+type SecretStore interface {
+	GetBySecretName(secretName string) (*model.Secret, error)
 }
 
 type TeamStore interface {

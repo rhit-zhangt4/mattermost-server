@@ -750,6 +750,22 @@ func (_m *SqlStore) Scheme() store.SchemeStore {
 	return r0
 }
 
+// Secret provides a mock function with given fields:
+func (_m *SqlStore) Secret() store.SecretStore {
+	ret := _m.Called()
+
+	var r0 store.SecretStore
+	if rf, ok := ret.Get(0).(func() store.SecretStore); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(store.SecretStore)
+		}
+	}
+
+	return r0
+}
+
 // Session provides a mock function with given fields:
 func (_m *SqlStore) Session() store.SessionStore {
 	ret := _m.Called()

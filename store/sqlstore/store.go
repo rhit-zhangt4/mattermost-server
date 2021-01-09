@@ -73,6 +73,7 @@ type SqlStore interface {
 	LockToMaster()
 	UnlockFromMaster()
 	ExtRef() store.ExtRefStore
+	Secret() store.SecretStore
 	Team() store.TeamStore
 	Channel() store.ChannelStore
 	Post() store.PostStore
