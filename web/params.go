@@ -79,6 +79,7 @@ type Params struct {
 	FilterParentTeamPermitted bool
 	CategoryId                string
 	WarnMetricId              string
+	ExtChatPlatform           string
 }
 
 func ParamsFromRequest(r *http.Request) *Params {
@@ -319,6 +320,10 @@ func ParamsFromRequest(r *http.Request) *Params {
 
 	if val, ok := props["warn_metric_id"]; ok {
 		params.WarnMetricId = val
+	}
+
+	if val, ok := props["extchat_platform"]; ok {
+		params.ExtChatPlatform = val
 	}
 
 	return params

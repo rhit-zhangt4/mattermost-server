@@ -451,6 +451,13 @@ func (a *App) createGroupChannel(userIds []string, creatorId string) (*model.Cha
 		return nil, err
 	}
 
+	for _, userId := range userIds {
+		_, err := a.Srv().Store.ExtRef().GetByAliasUserId(userId)
+		if err == nil {
+			return nil, model.NewAppError("CreateGroupChannel", "api.channel.create_group.alias_user.app_error", nil, "", http.StatusBadRequest)
+		}
+	}
+
 	if len(users) != len(userIds) {
 		return nil, model.NewAppError("CreateGroupChannel", "api.channel.create_group.bad_user.app_error", nil, "user_ids="+model.ArrayToJson(userIds), http.StatusBadRequest)
 	}

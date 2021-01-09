@@ -49,6 +49,7 @@ func genStore() *mocks.Store {
 	mock.On("Webhook").Return(&mocks.WebhookStore{})
 	mock.On("PublicEmoji").Return(&mocks.PublicEmojiStore{})
 	mock.On("ExtRef").Return(&mocks.ExtRefStore{})
+	mock.On("Secret").Return(&mocks.SecretStore{})
 	return mock
 }
 

@@ -116,6 +116,8 @@ type Routes struct {
 
 	TermsOfService *mux.Router // 'api/v4/terms_of_service'
 	Groups         *mux.Router // 'api/v4/groups'
+
+	ExtChat *mux.Router // 'api/v4/extchat/{extchat_platform:[A-Za-z0-9]+}'
 }
 
 type API struct {
@@ -221,6 +223,8 @@ func Init(configservice configservice.ConfigService, globalOptionsFunc app.AppOp
 	api.BaseRoutes.TermsOfService = api.BaseRoutes.ApiRoot.PathPrefix("/terms_of_service").Subrouter()
 	api.BaseRoutes.Groups = api.BaseRoutes.ApiRoot.PathPrefix("/groups").Subrouter()
 
+	api.BaseRoutes.ExtChat = api.BaseRoutes.ApiRoot.PathPrefix("/extchat/{extchat_platform:[A-Za-z0-9]+}").Subrouter()
+
 	api.InitUser()
 	api.InitBot()
 	api.InitTeam()
@@ -255,6 +259,8 @@ func Init(configservice configservice.ConfigService, globalOptionsFunc app.AppOp
 	api.InitTermsOfService()
 	api.InitGroup()
 	api.InitAction()
+
+	api.InitExtChat()
 
 	root.Handle("/api/v4/{anything:.*}", http.HandlerFunc(api.Handle404))
 
