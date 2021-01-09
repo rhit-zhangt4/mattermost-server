@@ -78,6 +78,7 @@ require (
 	github.com/olivere/elastic v6.2.33+incompatible // indirect
 	github.com/oov/psd v0.0.0-20200705094106-99303fb2511f
 	github.com/opentracing/opentracing-go v1.1.0
+	github.com/otiai10/copy v1.4.2
 	github.com/pborman/uuid v1.2.0
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
