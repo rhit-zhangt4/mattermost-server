@@ -371,6 +371,9 @@ github.com/oov/psd/color
 github.com/opentracing/opentracing-go
 github.com/opentracing/opentracing-go/ext
 github.com/opentracing/opentracing-go/log
+# github.com/otiai10/copy v1.4.2
+## explicit
+github.com/otiai10/copy
 # github.com/pborman/uuid v1.2.0
 ## explicit
 github.com/pborman/uuid
