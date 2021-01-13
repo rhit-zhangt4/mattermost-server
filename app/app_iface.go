@@ -401,6 +401,8 @@ type AppIface interface {
 	Config() *model.Config
 	Context() context.Context
 	CopyFileInfos(userId string, fileIds []string) ([]string, *model.AppError)
+	CreateAliasAccount(userName string, externalId string, platform string) *model.AppError
+	CreateAliasUser(user *model.User) (*model.User, *model.AppError)
 	CreateChannel(channel *model.Channel, addMember bool) (*model.Channel, *model.AppError)
 	CreateChannelWithUser(channel *model.Channel, userId string) (*model.Channel, *model.AppError)
 	CreateCommand(cmd *model.Command) (*model.Command, *model.AppError)

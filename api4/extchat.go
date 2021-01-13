@@ -15,6 +15,7 @@ func (api *API) InitExtChat() {
 	api.BaseRoutes.ExtChat.Handle("/verify", api.ApiHandler(verifyPasscode)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/isLinked", api.ApiHandler(isLinked)).Methods("GET")
 	api.BaseRoutes.ExtChat.Handle("/linkAccount", api.ApiSessionRequired(linkAccount)).Methods("POST")
+	api.BaseRoutes.ExtChat.Handle("/createAliasAccount", api.ApiHandler(createAliasAccount)).Methods("POST")
 	// api.BaseRoutes.Emojis.Handle("/search", api.ApiSessionRequired(searchEmojis)).Methods("POST")
 	// api.BaseRoutes.Emojis.Handle("/autocomplete", api.ApiSessionRequired(autocompleteEmojis)).Methods("GET")
 	// api.BaseRoutes.Emoji.Handle("", api.ApiSessionRequired(deleteEmoji)).Methods("DELETE")
@@ -69,7 +70,24 @@ func linkAccount(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ReturnStatusOK(w)
+}
 
+func createAliasAccount(c *Context, w http.ResponseWriter, r *http.Request) {
+	externalPlatform := c.Params.ExtChatPlatform
+	externalId := r.URL.Query().Get("externalId")
+	username := r.URL.Query().Get("nickName")
+	// user := model.User{Email: "",
+	// 	Nickname: nickname,
+	// 	Password: "",
+	// 	Username: GenerateTestUsername()
+	// 	isAlias: true
+	// }
+	err := c.App.CreateAliasAccount(username, externalId, externalPlatform)
+	if err != nil {
+		c.Err = err
+		return
+	}
+	ReturnStatusOK(w)
 }
 
 func startAuthentication(c *Context, w http.ResponseWriter, r *http.Request) {
