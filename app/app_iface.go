@@ -742,6 +742,7 @@ type AppIface interface {
 	IpAddress() string
 	IsFirstUserAccount() bool
 	IsLeader() bool
+	IsLinked(username string, platform string) bool
 	IsPasswordValid(password string) *model.AppError
 	IsPhase2MigrationCompleted() *model.AppError
 	IsUserAway(lastActivityAt int64) bool
@@ -753,6 +754,7 @@ type AppIface interface {
 	LeaveChannel(channelId string, userId string) *model.AppError
 	LeaveTeam(team *model.Team, user *model.User, requestorId string) *model.AppError
 	LimitedClientConfig() map[string]string
+	LinkAccount(extRef *model.ExtRef) *model.AppError
 	ListAllCommands(teamId string, T goi18n.TranslateFunc) ([]*model.Command, *model.AppError)
 	ListDirectory(path string) ([]string, *model.AppError)
 	ListPluginKeys(pluginId string, page, perPage int) ([]string, *model.AppError)

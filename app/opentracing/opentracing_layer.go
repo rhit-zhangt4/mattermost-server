@@ -9786,6 +9786,23 @@ func (a *OpenTracingAppLayer) IsLeader() bool {
 	return resultVar0
 }
 
+func (a *OpenTracingAppLayer) IsLinked(username string, platform string) bool {
+	origCtx := a.ctx
+	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.IsLinked")
+
+	a.ctx = newCtx
+	a.app.Srv().Store.SetContext(newCtx)
+	defer func() {
+		a.app.Srv().Store.SetContext(origCtx)
+		a.ctx = origCtx
+	}()
+
+	defer span.Finish()
+	resultVar0 := a.app.IsLinked(username, platform)
+
+	return resultVar0
+}
+
 func (a *OpenTracingAppLayer) IsPasswordValid(password string) *model.AppError {
 	origCtx := a.ctx
 	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.IsPasswordValid")
@@ -10026,6 +10043,28 @@ func (a *OpenTracingAppLayer) LimitedClientConfigWithComputed() map[string]strin
 
 	defer span.Finish()
 	resultVar0 := a.app.LimitedClientConfigWithComputed()
+
+	return resultVar0
+}
+
+func (a *OpenTracingAppLayer) LinkAccount(extRef *model.ExtRef) *model.AppError {
+	origCtx := a.ctx
+	span, newCtx := tracing.StartSpanWithParentByContext(a.ctx, "app.LinkAccount")
+
+	a.ctx = newCtx
+	a.app.Srv().Store.SetContext(newCtx)
+	defer func() {
+		a.app.Srv().Store.SetContext(origCtx)
+		a.ctx = origCtx
+	}()
+
+	defer span.Finish()
+	resultVar0 := a.app.LinkAccount(extRef)
+
+	if resultVar0 != nil {
+		span.LogFields(spanlog.Error(resultVar0))
+		ext.Error.Set(span, true)
+	}
 
 	return resultVar0
 }

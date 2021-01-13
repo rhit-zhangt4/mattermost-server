@@ -4713,6 +4713,30 @@ func (c *Client4) GetCanAccessPrivateEmojiImage(emojiId string, userId string) (
 	return data, BuildResponse(r)
 }
 
+func (c *Client4) IsLinked(realUserId string, externalPlatform string) ([]byte, *Response) {
+	query := fmt.Sprintf("?realUserId=%v", realUserId)
+	r, apErr := c.DoApiGet("/extchat/"+externalPlatform+"/isLinked"+query, "")
+	if apErr != nil {
+		return nil, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, BuildErrorResponse(r, NewAppError("checkIslinked", "model.client.read_file.app_error", nil, err.Error(), r.StatusCode))
+	}
+	return data, BuildResponse(r)
+}
+
+func (c *Client4) LinkAccount(externalId string, externalPlatform string) (bool, *Response) {
+	query := fmt.Sprintf("?externalId=%v", externalId)
+	r, apErr := c.DoApiPost("/extchat/"+externalPlatform+"/linkAccount"+query, "")
+	if apErr != nil {
+		return false, BuildErrorResponse(r, apErr)
+	}
+	defer closeBody(r)
+	return CheckStatusOK(r), BuildResponse(r)
+}
+
 func (c *Client4) SavePrivateEmoji(emojiId string, userId string) (bool, *Response) {
 	query := fmt.Sprintf("?userid=%v", userId)
 	r, apErr := c.DoApiPost(c.GetEmojiRoute(emojiId)+"/save"+query, "")

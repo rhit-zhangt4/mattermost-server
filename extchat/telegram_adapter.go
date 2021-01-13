@@ -14,6 +14,8 @@ import (
 	"github.com/otiai10/copy"
 )
 
+var client *tdlib.Client
+
 type TelegramAdapter struct {
 }
 
@@ -21,8 +23,9 @@ func (adapter *TelegramAdapter) StartAuthentication(a app.AppIface, username str
 	fmt.Println("Start Auth" + username)
 	tdlib.SetLogVerbosityLevel(1)
 	tdlib.SetFilePath("./logs/tdlib.log")
+	var err *model.AppError
 
-	client, err := adapter.getTdClient(a, username)
+	client, err = adapter.getTdClient(a, username)
 	if err != nil {
 		return err
 	}
@@ -108,20 +111,35 @@ func (adapter *TelegramAdapter) sendPhoneNumberToAuthorize(client *tdlib.Client,
 				//error
 				fmt.Printf("Error sending phone number: %v", err)
 			}
+			// defer client.DestroyInstance()
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 }
 
-func (adapter *TelegramAdapter) VerifyPasscode(a app.AppIface, username string, code string) (*model.ExtRef, *model.AppError) {
-	client, err := adapter.getTdClient(a, username)
-	if err != nil {
-		return nil, err
-	}
+func (adapter *TelegramAdapter) verifyPasscode(client *tdlib.Client, username string, code string) {
 	for {
-		currentState, _ := client.Authorize()
-		if currentState.GetAuthorizationStateEnum() == tdlib.AuthorizationStateWaitCodeType {
+		currentState, err := client.Authorize()
+		if err != nil {
+			fmt.Printf("Error verifying code: %v", err)
+			continue
+		}
+		fmt.Print("currentState is : ")
+		fmt.Println(currentState)
+		if currentState.GetAuthorizationStateEnum() == tdlib.AuthorizationStateWaitPhoneNumberType {
+			fmt.Println("Sending Phone")
+			//fmt.Print("Enter phone: ")
+			//var number string
+			//fmt.Scanln(&number)
+			_, err := client.SendPhoneNumber(username)
+			if err != nil {
+
+				//error
+				fmt.Printf("Error sending phone number: %v", err)
+			}
+			break
+		} else if currentState.GetAuthorizationStateEnum() == tdlib.AuthorizationStateWaitCodeType {
 			fmt.Println("Sending Code")
 			//fmt.Print("Enter phone: ")
 			//var number string
@@ -136,6 +154,19 @@ func (adapter *TelegramAdapter) VerifyPasscode(a app.AppIface, username string, 
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+}
+
+func (adapter *TelegramAdapter) VerifyPasscode(a app.AppIface, username string, code string) (*model.ExtRef, *model.AppError) {
+	fmt.Print("Start verifying: ")
+	// client, err := adapter.getTdClient(a, username)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	fmt.Print("client is: ")
+	fmt.Println(client)
+	fmt.Print("Code is: ")
+	fmt.Println(code)
+	go adapter.verifyPasscode(client, username, code)
 	return nil, nil
 }
 
