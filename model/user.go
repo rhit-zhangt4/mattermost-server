@@ -272,6 +272,10 @@ func (u *User) IsValid() *AppError {
 		return InvalidUserError("username", u.Id)
 	}
 
+	if u.IsAlias {
+		return nil
+	}
+
 	if len(u.Email) > USER_EMAIL_MAX_LENGTH || len(u.Email) == 0 || !IsValidEmail(u.Email) {
 		return InvalidUserError("email", u.Id)
 	}
