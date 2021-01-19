@@ -226,6 +226,34 @@ func (a *App) CreateGuest(user *model.User) (*model.User, *model.AppError) {
 	return a.createUserOrGuest(user, true)
 }
 
+func (a *App) CreateAliasUser(user *model.User) (*model.User, *model.AppError) {
+	user.MakeNonNil()
+
+	// if err := a.IsPasswordValid(user.Password); user.AuthService == "" && err != nil {
+	// 	return nil, err
+	// }
+
+	ruser, err := a.Srv().Store.User().Save(user)
+	if err != nil {
+		mlog.Error("Couldn't save the user", mlog.Err(err))
+		return nil, err
+	}
+
+	// if user.EmailVerified {
+	// 	if err := a.VerifyUserEmail(ruser.Id, user.Email); err != nil {
+	// 		mlog.Error("Failed to set email verified", mlog.Err(err))
+	// 	}
+	// }
+
+	// pref := model.Preference{UserId: ruser.Id, Category: model.PREFERENCE_CATEGORY_TUTORIAL_STEPS, Name: ruser.Id, Value: "0"}
+	// if err := a.Srv().Store.Preference().Save(&model.Preferences{pref}); err != nil {
+	// 	mlog.Error("Encountered error saving tutorial preference", mlog.Err(err))
+	// }
+
+	ruser.Sanitize(map[string]bool{})
+	return ruser, nil
+}
+
 func (a *App) createUserOrGuest(user *model.User, guest bool) (*model.User, *model.AppError) {
 	user.Roles = model.SYSTEM_USER_ROLE_ID
 	if guest {

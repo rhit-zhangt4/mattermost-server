@@ -401,6 +401,8 @@ type AppIface interface {
 	Config() *model.Config
 	Context() context.Context
 	CopyFileInfos(userId string, fileIds []string) ([]string, *model.AppError)
+	CreateAliasAccount(userName string, externalId string, platform string) *model.AppError
+	CreateAliasUser(user *model.User) (*model.User, *model.AppError)
 	CreateChannel(channel *model.Channel, addMember bool) (*model.Channel, *model.AppError)
 	CreateChannelWithUser(channel *model.Channel, userId string) (*model.Channel, *model.AppError)
 	CreateCommand(cmd *model.Command) (*model.Command, *model.AppError)
@@ -742,6 +744,7 @@ type AppIface interface {
 	IpAddress() string
 	IsFirstUserAccount() bool
 	IsLeader() bool
+	IsLinked(username string, platform string) bool
 	IsPasswordValid(password string) *model.AppError
 	IsPhase2MigrationCompleted() *model.AppError
 	IsUserAway(lastActivityAt int64) bool
@@ -753,6 +756,7 @@ type AppIface interface {
 	LeaveChannel(channelId string, userId string) *model.AppError
 	LeaveTeam(team *model.Team, user *model.User, requestorId string) *model.AppError
 	LimitedClientConfig() map[string]string
+	LinkAccount(extRef *model.ExtRef) *model.AppError
 	ListAllCommands(teamId string, T goi18n.TranslateFunc) ([]*model.Command, *model.AppError)
 	ListDirectory(path string) ([]string, *model.AppError)
 	ListPluginKeys(pluginId string, page, perPage int) ([]string, *model.AppError)
