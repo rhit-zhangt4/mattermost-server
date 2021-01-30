@@ -5,7 +5,6 @@ package sqlstore
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/mattermost/mattermost-server/v5/einterfaces"
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -37,18 +36,6 @@ func (es SqlSecretStore) createIndexesIfNotExists() {
 	es.CreateIndexIfNotExists("idx_secret", "Secret", "SecretName")
 }
 
-// func (es SqlSecretStore) Save(public_emoji *model.Secret) (*model.Secret, error) {
-// 	// if err := public_emoji.IsValid(); err != nil {
-// 	// 	return nil, err
-// 	// }
-
-// 	if err := es.GetMaster().Insert(secret); err != nil {
-// 		return nil, errors.Wrap(err, "error saving secret")
-// 	}
-
-// 	return secret, nil
-// }
-
 func (es SqlSecretStore) GetBySecretName(secretName string) (*model.Secret, error) {
 	var secret *model.Secret
 
@@ -60,7 +47,7 @@ func (es SqlSecretStore) GetBySecretName(secretName string) (*model.Secret, erro
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, store.NewErrNotFound("Secret", fmt.Sprintf("%s", secretName))
+			return nil, store.NewErrNotFound("Secret", secretName)
 		}
 
 		return nil, errors.Wrapf(err, "could not get secret by name %s", secretName)

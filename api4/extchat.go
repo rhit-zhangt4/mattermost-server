@@ -24,8 +24,6 @@ func isLinked(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("false"))
-	return
-
 }
 
 func linkAccount(c *Context, w http.ResponseWriter, r *http.Request) {

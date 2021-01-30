@@ -16,6 +16,7 @@ import (
 // Store can be used to provide mock stores for testing.
 type Store struct {
 	ExtRefStore               mocks.ExtRefStore
+	SecretStore               mocks.SecretStore
 	TeamStore                 mocks.TeamStore
 	ChannelStore              mocks.ChannelStore
 	PostStore                 mocks.PostStore
@@ -55,6 +56,7 @@ type Store struct {
 func (s *Store) SetContext(context context.Context)                { s.context = context }
 func (s *Store) Context() context.Context                          { return s.context }
 func (s *Store) ExtRef() store.ExtRefStore                         { return &s.ExtRefStore }
+func (s *Store) Secret() store.SecretStore                         { return &s.SecretStore }
 func (s *Store) Team() store.TeamStore                             { return &s.TeamStore }
 func (s *Store) Channel() store.ChannelStore                       { return &s.ChannelStore }
 func (s *Store) Post() store.PostStore                             { return &s.PostStore }
