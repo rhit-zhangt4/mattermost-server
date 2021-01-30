@@ -3,7 +3,6 @@ module github.com/mattermost/mattermost-server/v5
 go 1.14
 
 require (
-	github.com/Arman92/go-tdlib v0.0.0-20201227223502-25aa12c0e7f9
 	github.com/Masterminds/squirrel v1.4.0
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/RoaringBitmap/roaring v0.4.23 // indirect
