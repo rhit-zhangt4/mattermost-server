@@ -4,6 +4,7 @@
 package api4
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -19,11 +20,9 @@ func isLinked(c *Context, w http.ResponseWriter, r *http.Request) {
 	externalPlatform := c.Params.ExtChatPlatform
 	realUserId := r.URL.Query().Get("realUserId")
 	isLinked := c.App.IsLinked(realUserId, externalPlatform)
-	if isLinked {
-		w.Write([]byte("true"))
-		return
-	}
-	w.Write([]byte("false"))
+
+	w.Write([]byte(fmt.Sprintf("%t", isLinked)))
+	ReturnStatusOK(w)
 }
 
 func linkAccount(c *Context, w http.ResponseWriter, r *http.Request) {
