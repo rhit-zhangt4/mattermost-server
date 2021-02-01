@@ -22,7 +22,6 @@ func isLinked(c *Context, w http.ResponseWriter, r *http.Request) {
 	isLinked := c.App.IsLinked(realUserId, externalPlatform)
 
 	w.Write([]byte(fmt.Sprintf("%t", isLinked)))
-	ReturnStatusOK(w)
 }
 
 func linkAccount(c *Context, w http.ResponseWriter, r *http.Request) {
