@@ -11,11 +11,7 @@ import (
 
 func (a *App) IsLinked(username string, platform string) bool {
 	_, err := a.Srv().Store.ExtRef().GetByRealUserIdAndPlatform(username, platform)
-	if err != nil {
-		return false
-	}
-	return true
-
+	return err != nil
 }
 
 func (a *App) LinkAccount(extRef *model.ExtRef) *model.AppError {
