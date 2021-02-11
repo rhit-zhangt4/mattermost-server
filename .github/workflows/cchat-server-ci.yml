@@ -492,8 +492,6 @@ jobs:
 
       - name: Check Type
         run: | 
-          mv -T non_npm_dependencies/tdweb/prebuilt/release/td_asmjs.js non_npm_dependencies/tdweb/prebuilt/release/td_asmjs.js_ignore 
-          mv -T non_npm_dependencies/tdweb/prebuilt/release/td_wasm.js non_npm_dependencies/tdweb/prebuilt/release/td_wasm.js_ignore 
           npm run check-types
         working-directory: ./mattermost-webapp
 
