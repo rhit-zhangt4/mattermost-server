@@ -491,7 +491,8 @@ jobs:
         working-directory: ./mattermost-webapp
 
       - name: Check Type
-        run: npm run check-types
+        run: | 
+          npm run check-types
         working-directory: ./mattermost-webapp
 
   test-webapp:
